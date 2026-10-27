@@ -1,0 +1,25 @@
+# `lib` CLI
+
+Run from the repo root as `pnpm -s lib <command>` (the `-s` keeps pnpm's banner out of JSON output). Server: `LIB_API_URL` (default `http://localhost:3000`, read from `.env`). Output is JSON unless noted.
+
+| Command | What it does |
+| --- | --- |
+| `list [--chapters]` | Documents (and chapters) |
+| `show <doc>` | `document.json` + progress and annotation counts per chapter |
+| `chapter <doc> <ch> [-a]` | Chapter Markdown; `-a/--with-annotations` inlines highlights `==text==[^a-id]` with notes and deep links (Markdown output) |
+| `annotations [doc] [-c ch] [-s 7d] [-t types] [--tag t] [-q text] [-f md]` | Highlights/notes; `-f md` groups them with deep links |
+| `add-note <doc> [ch] [-q quote] [-b body] [-t note\|highlight\|ai_question\|bookmark] [--color c] [--tags a,b]` | Create; `--quote` anchors to the passage (fuzzy tolerant) and prints the deep link |
+| `edit-note <id> [-b] [--tags] [--color] [-t]` / `delete-note <id>` | Change / remove |
+| `record-session <doc> [ch] -f file.json\|- [-k study\|review]` | Save `{questions:[{question,answer,feedback,correct,quote,annotationId}], score, summary, followUps}` |
+| `sessions [doc] [-c ch] [-s 30d]` | Past sessions |
+| `import <file\|url> [--id] [--toc-depth n] [--no-wait]` | Upload/queue and wait; prints chapters, words, warnings |
+| `reimport <doc>` | Re-run from `source/` keeping ids |
+| `jobs` | Recent import jobs |
+| `report <doc>` | `import-report.json` |
+| `pull <doc> [dir]` | Download `document.json`, `chapters/*.md`, `import-report.json`, `assets.txt` to `_temp/edit/<doc>` |
+| `push <doc> [dir]` | Upload the edited folder (validates, recomputes, reindexes) |
+| `search <query…>` | Full-text search |
+| `export [doc]` | Backup annotations into the library folders |
+| `reindex [doc]` | Rebuild DB index from disk |
+| `remove <doc> [--force]` | Delete a document |
+| `health` | Server + DB check |
