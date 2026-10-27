@@ -1,0 +1,8 @@
+{
+  "threshold": 3,
+  "minTokens": 40,
+  "minLines": 5,
+  "reporters": ["console"],
+  "ignore": ["**/test/**", "**/*.test.ts", "**/node_modules/**", "**/.next/**", "**/drizzle/**"],
+  "gitignore": true
+}

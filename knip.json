@@ -1,0 +1,21 @@
+{
+  "$schema": "https://unpkg.com/knip@5/schema.json",
+  "workspaces": {
+    ".": {
+      "entry": ["scripts/**/*.mjs"]
+    },
+    "apps/web": {},
+    "packages/core": {
+      "entry": ["src/index.ts", "src/db/index.ts", "src/db/schema.ts", "src/db/migrate-cli.ts"]
+    },
+    "packages/ingest": {
+      "entry": ["src/index.ts"]
+    },
+    "packages/anchoring": {
+      "entry": ["src/index.ts"]
+    },
+    "packages/cli": {
+      "entry": ["src/index.ts"]
+    }
+  }
+}
