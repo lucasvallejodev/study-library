@@ -8,6 +8,7 @@ import {
   registerAnnotations,
   registerDeleteNote,
   registerEditNote,
+  registerNote,
 } from './commands/annotations';
 import { registerAssets } from './commands/assets';
 import {
@@ -32,6 +33,7 @@ const CommandsInHelpOrder = [
   registerChapter,
   registerAssets,
   registerAnnotations,
+  registerNote,
   registerAddNote,
   registerEditNote,
   registerDeleteNote,

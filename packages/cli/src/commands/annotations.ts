@@ -151,6 +151,13 @@ const toAnnotationPatch = (options: EditNoteOptions): AnnotationPatch => {
   return patch;
 };
 
+export const registerNote = (program: Command): void => {
+  program
+    .command('note <id>')
+    .description('One annotation: passage, note, tags, document and chapter')
+    .action(async (id: string) => print(await request<Annotation>(`/api/annotations/${id}`)));
+};
+
 export const registerEditNote = (program: Command): void => {
   program
     .command('edit-note <id>')
