@@ -372,7 +372,9 @@ export function Reader(props: Props) {
 
       <div className="sticky top-14 z-20 border-b border-line bg-paper/95 backdrop-blur">
         <div className="mx-auto flex h-11 max-w-6xl items-center gap-3 px-4 text-sm">
-          <button onClick={() => setTocOpen(true)} className="rounded px-2 py-1 hover:bg-panel" aria-label="Table of contents">☰ Contents</button>
+          <button onClick={() => setTocOpen(true)} className="shrink-0 whitespace-nowrap rounded px-2 py-1 hover:bg-panel" aria-label="Table of contents">
+            ☰<span className="hidden sm:inline"> Contents</span>
+          </button>
           <Link href={`/read/${doc.id}`} className="hidden truncate text-muted hover:text-ink sm:block">{doc.title}</Link>
           <span className="hidden text-muted sm:inline">/</span>
           <span className="truncate">{chapter.title}</span>
@@ -380,7 +382,7 @@ export function Reader(props: Props) {
           <button onClick={toggleBookmark} className="rounded px-2 py-1 hover:bg-panel" title={bookmark ? "Remove bookmark" : "Bookmark chapter"}>
             {bookmark ? "★" : "☆"}
           </button>
-          <button onClick={() => setSheetOpen((v) => !v)} className="rounded px-2 py-1 hover:bg-panel xl:hidden">Notes {count > 0 && `(${count})`}</button>
+          <button onClick={() => setSheetOpen((v) => !v)} className="shrink-0 whitespace-nowrap rounded px-2 py-1 hover:bg-panel xl:hidden">Notes{count > 0 && ` (${count})`}</button>
         </div>
       </div>
 

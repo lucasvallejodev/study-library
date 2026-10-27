@@ -49,6 +49,11 @@ body {
   font-size: 1.2rem;
   line-height: 1.7;
 }
+@media (max-width: 640px) {
+  .reader-prose {
+    font-size: 1.08rem;
+  }
+}
 .reader-prose img {
   margin-inline: auto;
   max-height: 80vh;

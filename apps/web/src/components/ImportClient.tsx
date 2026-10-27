@@ -88,7 +88,7 @@ export function ImportClient() {
         onClick={() => fileInput.current?.click()}
         className={`mt-8 cursor-pointer rounded-xl border-2 border-dashed p-10 text-center transition ${dragging ? "border-accent bg-panel" : "border-line hover:border-accent"}`}
       >
-        <p className="font-serif text-lg">Drop books here or click to choose</p>
+        <p className="font-serif text-lg text-ink">Drop books here or click to choose</p>
         <p className="mt-1 text-sm text-muted">.epub · .mobi · .azw · .azw3 · .html · .md</p>
         <input
           ref={fileInput}

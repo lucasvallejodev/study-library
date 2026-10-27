@@ -20,9 +20,10 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       </head>
       <body className="min-h-screen font-sans antialiased">
         <header className="sticky top-0 z-30 border-b border-line bg-paper/90 backdrop-blur">
-          <nav className="mx-auto flex h-14 max-w-6xl items-center gap-5 px-4 text-sm">
-            <Link href="/" className="font-serif text-lg font-semibold tracking-tight">
-              Study Library
+          <nav className="mx-auto flex h-14 max-w-6xl items-center gap-4 px-4 text-sm sm:gap-5">
+            <Link href="/" className="whitespace-nowrap font-serif text-lg font-semibold tracking-tight">
+              <span className="sm:hidden">Library</span>
+              <span className="hidden sm:inline">Study Library</span>
             </Link>
             <Link href="/notebook" className="text-muted hover:text-ink">Notebook</Link>
             <Link href="/import" className="text-muted hover:text-ink">Import</Link>
@@ -33,7 +34,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                 className="w-64 rounded-md border border-line bg-panel px-3 py-1.5 outline-none focus:border-accent"
               />
             </form>
-            <Link href="/search" className="text-muted hover:text-ink sm:hidden" aria-label="Search">Search</Link>
+            <Link href="/search" className="ml-auto text-muted hover:text-ink sm:hidden" aria-label="Search">Search</Link>
             <ThemeToggle />
           </nav>
         </header>
