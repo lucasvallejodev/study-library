@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import type { Annotation, HighlightColor } from "@study/core";
 import { api } from "./api";
 
@@ -33,6 +33,12 @@ export function AnnotationCard({ annotation: a, active, editing, onEdit, onFocus
     setBody(a.body ?? "");
     setTags(a.tags.join(", "));
   }, [a.body, a.tags]);
+  const editorRef = useRef<HTMLTextAreaElement>(null);
+  // Focus without scrolling: a new margin card is still at the top of the margin when it mounts,
+  // and autoFocus would scroll the page up to it before it is moved beside its passage.
+  useEffect(() => {
+    if (editing) editorRef.current?.focus({ preventScroll: true });
+  }, [editing]);
   const quote = quoteOf(a);
   const byClaude = a.tags.includes("claude");
   const swatch = a.type === "ai_question" ? "question" : byClaude && !a.color ? "claude" : (a.color ?? "yellow");
@@ -74,7 +80,7 @@ export function AnnotationCard({ annotation: a, active, editing, onEdit, onFocus
       {editing ? (
         <div className="mt-2 space-y-2">
           <textarea
-            autoFocus
+            ref={editorRef}
             value={body}
             onChange={(e) => setBody(e.target.value)}
             onKeyDown={(e) => {

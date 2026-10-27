@@ -106,6 +106,11 @@ export function Reader(props: Props) {
   const cardRefs = useRef(new Map<string, HTMLDivElement>());
   const [tops, setTops] = useState<Record<string, number>>({});
   const [layoutTick, setLayoutTick] = useState(0);
+  // Cards appear in place the first time they are positioned; only later moves are animated.
+  const placedRef = useRef(new Set<string>());
+  useEffect(() => {
+    for (const id of Object.keys(tops)) placedRef.current.add(id);
+  }, [tops]);
 
   useEffect(() => {
     try {
@@ -124,6 +129,7 @@ export function Reader(props: Props) {
   useLayoutEffect(() => {
     const margin = marginRef.current;
     if (!margin || margin.offsetParent === null) return; // margin hidden below xl
+    for (const id of cardRefs.current.keys()) if (!marginItems.some((a) => a.id === id)) cardRefs.current.delete(id);
     const origin = margin.getBoundingClientRect().top;
     const gap = 8;
     const items = marginItems.map((a) => ({
@@ -536,10 +542,13 @@ export function Reader(props: Props) {
               <div
                 key={a.id}
                 ref={(el) => {
-                  if (el) cardRefs.current.set(a.id, el);
-                  else cardRefs.current.delete(a.id);
+                  if (!el) return; // stale entries are pruned by the layout effect
+                  const isNew = !cardRefs.current.has(a.id);
+                  cardRefs.current.set(a.id, el);
+                  // A new card (e.g. a note just created) needs a layout pass once it can be measured.
+                  if (isNew) requestAnimationFrame(() => setLayoutTick((n) => n + 1));
                 }}
-                className="absolute inset-x-0 transition-[top,opacity] duration-200"
+                className={`absolute inset-x-0 ${placedRef.current.has(a.id) ? "transition-[top] duration-200" : ""}`}
                 style={{ top: tops[a.id] ?? 0, opacity: a.id in tops ? 1 : 0 }}
                 onMouseEnter={() => setHoverId(a.id)}
                 onMouseLeave={() => setHoverId(undefined)}
