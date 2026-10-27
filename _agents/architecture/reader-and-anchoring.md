@@ -33,7 +33,7 @@ CSS Custom Highlight API (`CSS.highlights`): one `Highlight` per color plus `hl-
 The text column is up to 900px wide; figures and standalone images may extend to 1,100px (`--reader-figure-width` in `globals.css`), tables scroll sideways, and clicking an image opens it scaled to the screen (`image-lightbox.tsx`). There is no notes margin:
 
 - A passage with a note or a Claude question ends in a small dot (`note-markers.tsx`, measured from the range's last line).
-- Clicking painted text or a dot opens `note-bubble.tsx` under the passage, as wide as the text column: every annotation overlapping that passage (`passages.ts`), yours first, then AI notes and questions (tagged `claude`), in larger text with edit/color/link/Ask AI/delete. Click elsewhere, the ✕ or Esc closes it.
+- Clicking painted text or a dot opens `note-bubble.tsx` under the passage, as wide as the text column: every annotation overlapping that passage (`passages.ts`), yours first, then AI notes and questions (tagged `ai`), in larger text with edit/color/link/Ask AI/delete. Click elsewhere, the ✕ or Esc closes it.
 - "Note" in the selection popover opens the bubble with the editor focused (`preventScroll`); deep links (`#a-…`) pulse the passage and open its bubble. The bubble only scrolls the page when the passage or the bubble would be hidden (below the 100px of sticky headers or past the viewport bottom).
 - "Notes (n)" in the toolbar opens the list of every note in the chapter (`notes-sheet.tsx`); orphaned notes are listed under the text. "✦ AI notes" copies `/highlight-notes <doc> <chapter>`.
 - Positions re-measure on resize and when the article changes size (`use-layout-tick.ts`).

@@ -256,6 +256,6 @@ mark[data-annotation][data-color='pink'] {
 .swatch-question {
   background: rgb(170 140 255);
 }
-.swatch-claude {
+.swatch-ai {
   background: var(--color-accent);
 }

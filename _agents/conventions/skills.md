@@ -43,11 +43,11 @@ Open the files near the passage (use `line` to match them to the text) and use w
 
 | Result about…        | Save with                                                                                                       |
 | -------------------- | --------------------------------------------------------------------------------------------------------------- |
-| One highlight        | `pnpm -s lib add-note <doc> --on <highlight-id> --type note --tags claude,<skill> --body …`                     |
-| A chapter            | `pnpm -s lib add-note <doc> <chapter> --type note --tags claude,<skill> --body …` (shows under "Chapter notes") |
+| One highlight        | `pnpm -s lib add-note <doc> --on <highlight-id> --type note --tags ai,<skill> --body …`                     |
+| A chapter            | `pnpm -s lib add-note <doc> <chapter> --type note --tags ai,<skill> --body …` (shows under "Chapter notes") |
 | A question to review | `pnpm -s lib add-note <doc> <chapter> --type ai_question --quote "<exact passage>" --tags review --body …`      |
 
-- Tag every note with `claude` plus the skill name (`further-reading`, `visualize`…), so `/notebook?tag=<skill>` lists them.
+- Tag every note with `ai` plus the skill name (`further-reading`, `visualize`…), so `/notebook?tag=<skill>` lists them.
 - Before adding, look for an earlier note from the same skill (`pnpm -s lib annotations <doc> -c <chapter> --tag <skill>`) and update it with `pnpm -s lib edit-note <id> --body …` instead of duplicating.
 - Long bodies: write `_temp/<skill>-<doc>-<chapter>.md` and pass `--body "$(cat _temp/<file>.md)"`; delete the file afterwards.
 - Ask before saving when the result is conversational (`ask`, `teach-back`); save without asking when the user asked for a written result (`further-reading`, `visualize`, `primer`…).

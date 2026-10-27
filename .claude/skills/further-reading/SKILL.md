@@ -49,4 +49,4 @@ Say which resource answers which open question from the user's notes, if any.
 
 ## Save
 
-Chapter target: chapter note. Highlight target: note on the highlight. Tags `claude,further-reading`. Update an earlier further-reading note instead of adding a second one (keep links the user may have opened; mark removed ones).
+Chapter target: chapter note. Highlight target: note on the highlight. Tags `ai,further-reading`. Update an earlier further-reading note instead of adding a second one (keep links the user may have opened; mark removed ones).

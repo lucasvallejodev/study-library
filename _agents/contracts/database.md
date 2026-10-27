@@ -1,6 +1,6 @@
 # Database (PostgreSQL 18, Drizzle)
 
-Schema: `packages/core/src/db/schema.ts`. Migrations: `packages/core/drizzle/` (generate with `pnpm db:generate --name <change>`; they run on server start and with `pnpm db:migrate`). `0000_init` also enables `pg_trgm`.
+Schema: `packages/core/src/db/schema.ts`. Migrations: `packages/core/drizzle/` (generate with `pnpm db:generate --name <change>`; they run on server start and with `pnpm db:migrate`). `0000_init` also enables `pg_trgm`; `0001_rename-claude-tag-to-ai` is a data-only migration that renames the old `claude` tag to `ai`.
 
 | Table              | Rebuildable from disk? | Key columns                                                                                                                                              |
 | ------------------ | ---------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -17,4 +17,5 @@ Annotation shapes:
 - Chapter note: `type=note`, `chapter_id` set, `selectors=[]`.
 - Free note: `type=note`, `document_id=null`.
 - Bookmark: `type=bookmark`, chapter-level.
-- Claude question: `type=ai_question`, usually anchored with selectors, `body` = the question (and optional hint).
+- AI question: `type=ai_question`, usually anchored with selectors, `body` = the question (and optional hint).
+- AI note: any note written by an agent, tagged `ai` plus the skill name (`ai,visualize`); the reader labels it "AI note" and hides the `ai` tag on its cards; `/notebook?tag=ai` lists them all.

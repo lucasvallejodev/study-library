@@ -43,4 +43,4 @@ Mark your own judgement as such; do not present a contested view as settled.
 
 ## Save
 
-Note on the highlight or chapter note, tags `claude,critique`. Offer a short follow-up: the user answers "Your turn" and you respond, without saving unless asked.
+Note on the highlight or chapter note, tags `ai,critique`. Offer a short follow-up: the user answers "Your turn" and you respond, without saving unless asked.

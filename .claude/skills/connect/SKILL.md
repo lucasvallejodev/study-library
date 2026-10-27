@@ -46,4 +46,4 @@ Prefer connections to the user's own highlights and notes (they show what they c
 **Worth thinking about.** One question that the connections raise together.
 ```
 
-Save as a note on the highlight, or a chapter note, tagged `claude,connect`. When a connection points at one of the user's highlights, also offer to add a short note on that highlight linking back (`--on <that-id>`), so the link works both ways.
+Save as a note on the highlight, or a chapter note, tagged `ai,connect`. When a connection points at one of the user's highlights, also offer to add a short note on that highlight linking back (`--on <that-id>`), so the link works both ways.

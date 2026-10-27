@@ -7,7 +7,7 @@
   - `study`: `/study <doc> <chapter> [--focus <annotation-id>]` runs a study session.
   - `review`: `/review [days]` mixed review of recent highlights and missed questions.
   - `study-notes`: write summaries, key ideas and glossaries for chapters as chapter notes.
-  - `highlight-notes`: `/highlight-notes <doc> [chapter]` writes Claude's notes beside the user's highlights (margin, tagged `claude`).
+  - `highlight-notes`: `/highlight-notes <doc> [chapter]` writes Claude's notes beside the user's highlights (margin, tagged `ai`).
   - `pdf-to-library`: turn a PDF (or any document Claude can read) into a library document.
   - `verify-mvp`: end-to-end check of the whole app after changes.
   - `ask`, `further-reading`, `visualize`, `primer`, `teach-back`, `exercises`, `critique`, `connect`, `chapter-synthesis`, `flashcards`: study helpers on a chapter or a highlight (see the table in `AGENTS.md`).

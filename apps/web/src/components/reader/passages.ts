@@ -2,10 +2,10 @@ import type { Annotation } from '@study/core';
 
 import type { RangeMap } from './reader-types';
 
-const CLAUDE_TAG = 'claude';
+const AI_TAG = 'ai';
 
 const BubbleOrder: Record<string, number> = {
-  claude: 1,
+  ai: 1,
   question: 2,
   yours: 0,
 };
@@ -24,7 +24,7 @@ function overlaps(left: Range, right: Range): boolean {
 
 function bubbleRank(annotation: Annotation): number {
   if (annotation.type === 'ai_question') return BubbleOrder.question;
-  if (annotation.tags.includes(CLAUDE_TAG)) return BubbleOrder.claude;
+  if (annotation.tags.includes(AI_TAG)) return BubbleOrder.ai;
 
   return BubbleOrder.yours;
 }

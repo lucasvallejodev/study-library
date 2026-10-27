@@ -19,7 +19,7 @@ Unlike a summary (`study-notes`), a synthesis is about **what the user took from
 ```bash
 pnpm -s lib chapter <doc> <chapter> --with-annotations     # text + the user's highlights and notes
 pnpm -s lib sessions <doc> -c <chapter>                     # study / teach-back results: what stuck, what did not
-pnpm -s lib annotations <doc> -c <chapter> --tag claude     # earlier Claude notes (ask, visualize, further-reading…)
+pnpm -s lib annotations <doc> -c <chapter> --tag ai     # earlier AI notes (ask, visualize, further-reading…)
 pnpm -s lib annotations <doc> --tag chapter-synthesis       # syntheses of earlier chapters, to link the thread
 ```
 
@@ -47,4 +47,4 @@ Optionally one small Mermaid diagram if the chapter's ideas form a clear structu
 
 ## Save
 
-Chapter note tagged `claude,chapter-synthesis` (update the existing one if it exists). Suggest `/flashcards` for the "Remember" and "Still shaky" points.
+Chapter note tagged `ai,chapter-synthesis` (update the existing one if it exists). Suggest `/flashcards` for the "Remember" and "Still shaky" points.

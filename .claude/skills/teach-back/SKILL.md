@@ -32,4 +32,4 @@ Record the session (`kind` study, one entry per round with `correct` = whether t
 pnpm -s lib record-session <doc> <chapter> -f _temp/teach-back-<doc>-<chapter>.json
 ```
 
-For each point they kept missing, add a review question anchored to the passage (`--type ai_question --tags review`). Ask before also saving their final explanation as a note on the highlight (tags `claude,teach-back`): it is a great thing to reread later.
+For each point they kept missing, add a review question anchored to the passage (`--type ai_question --tags review`). Ask before also saving their final explanation as a note on the highlight (tags `ai,teach-back`): it is a great thing to reread later.

@@ -40,4 +40,4 @@ When the user says they are done (or stuck): run the tests, read their code, and
 
 ## Save
 
-Ask before saving a chapter note tagged `claude,exercises` with the tasks, the user's result per task and the key lesson. Add `--type ai_question --tags review` questions for concepts they struggled with. Tell the user the folder path; `_temp/` is git-ignored.
+Ask before saving a chapter note tagged `ai,exercises` with the tasks, the user's result per task and the key lesson. Add `--type ai_question --tags review` questions for concepts they struggled with. Tell the user the folder path; `_temp/` is git-ignored.

@@ -21,7 +21,7 @@ import { forgetKnownTags } from '../notes/use-known-tags';
 import { AnnotationApi } from './api';
 import { cardElementId } from './reader-types';
 
-const CLAUDE_TAG = 'claude';
+const AI_TAG = 'ai';
 
 const EditorRows: Record<CardVariant, number> = {
   bubble: 6,
@@ -60,21 +60,19 @@ function draftOf(annotation: DraftSource): Draft {
   return { body: annotation.body ?? '', tags: annotation.tags };
 }
 
-function isByClaude(annotation: Annotation): boolean {
-  return annotation.tags.includes(CLAUDE_TAG);
+function isByAi(annotation: Annotation): boolean {
+  return annotation.tags.includes(AI_TAG);
 }
 
 function swatchOf(annotation: Annotation): string {
   if (annotation.type === 'ai_question') return 'question';
-  if (isByClaude(annotation) && !annotation.color) return 'claude';
+  if (isByAi(annotation) && !annotation.color) return 'ai';
 
   return annotation.color ?? 'yellow';
 }
 
 function visibleTagsOf(annotation: Annotation): string[] {
-  return isByClaude(annotation)
-    ? annotation.tags.filter(tag => tag !== CLAUDE_TAG)
-    : annotation.tags;
+  return isByAi(annotation) ? annotation.tags.filter(tag => tag !== AI_TAG) : annotation.tags;
 }
 
 function cardClass(active: boolean, variant: CardVariant): string {
@@ -143,7 +141,7 @@ export function AnnotationCard(props: Props) {
 
 function authorLabelOf(annotation: Annotation): string {
   if (annotation.type === 'ai_question') return 'AI asked';
-  if (isByClaude(annotation)) return 'AI note';
+  if (isByAi(annotation)) return 'AI note';
   if (annotation.body) return 'Your note';
 
   return 'Highlight';
@@ -159,7 +157,7 @@ function BubbleLabel({ annotation }: { annotation: Annotation }) {
 }
 
 function CardLabel({ annotation }: { annotation: Annotation }) {
-  if (annotation.type !== 'ai_question' && !isByClaude(annotation)) return null;
+  if (annotation.type !== 'ai_question' && !isByAi(annotation)) return null;
 
   return (
     <div className="mb-1 text-[11px] font-semibold uppercase tracking-wider text-muted">

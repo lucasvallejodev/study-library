@@ -33,4 +33,4 @@ When the conversation ends, or the user says "save it", offer to save a condense
 **Open questions:** …
 ```
 
-On a highlight: `pnpm -s lib add-note <doc> --on <a-id> --type note --tags claude,ask --body …`. On a chapter: a chapter note with the same tags. If the user's own note asked a question you answered, say where the answer is saved.
+On a highlight: `pnpm -s lib add-note <doc> --on <a-id> --type note --tags ai,ask --body …`. On a chapter: a chapter note with the same tags. If the user's own note asked a question you answered, say where the answer is saved.

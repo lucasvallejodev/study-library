@@ -56,4 +56,4 @@ Rules: under ~15 nodes per diagram, labels in the book's words, label non-obviou
 
 ## Save
 
-Highlight: note on the highlight. Chapter: chapter note. Tags `claude,visualize`. Then tell the user to open the link: the diagram renders in the note (light and dark theme).
+Highlight: note on the highlight. Chapter: chapter note. Tags `ai,visualize`. Then tell the user to open the link: the diagram renders in the note (light and dark theme).

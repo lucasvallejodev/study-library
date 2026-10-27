@@ -34,4 +34,4 @@ Read the chapter and skim its figures (`pnpm -s lib assets`). Read the previous 
 
 ## Save
 
-Chapter note tagged `claude,primer`, so it shows under "Chapter notes" (it shows at the end of the chapter; tell the user to read the note first, e.g. from `/notebook?tag=primer` or this link). Suggest running `/study` or `/teach-back` after reading.
+Chapter note tagged `ai,primer`, so it shows under "Chapter notes" (it shows at the end of the chapter; tell the user to read the note first, e.g. from `/notebook?tag=primer` or this link). Suggest running `/study` or `/teach-back` after reading.
