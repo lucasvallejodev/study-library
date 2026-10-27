@@ -13,3 +13,4 @@ library/*
 _temp/*
 !_temp/.gitkeep
 data/
+backups/

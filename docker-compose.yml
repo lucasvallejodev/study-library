@@ -29,5 +29,26 @@ services:
       db:
         condition: service_healthy
     restart: unless-stopped
+  backup:
+    image: postgres:18
+    environment:
+      PGPASSWORD: ${DB_PASSWORD:-library}
+      KEEP_DAYS: ${BACKUP_KEEP_DAYS:-14}
+    volumes:
+      - ${BACKUP_HOST_DIR:-./backups}:/backups
+    entrypoint: ["/bin/sh", "-c"]
+    # Nightly pg_dump of annotations, study history and the index; keeps the last KEEP_DAYS days.
+    command:
+      - |
+        while true; do
+          f=/backups/library-$$(date +%Y%m%d-%H%M).sql.gz
+          pg_dump -h db -U library library | gzip > "$$f" && echo "backup: $$f"
+          find /backups -name 'library-*.sql.gz' -mtime +$$KEEP_DAYS -delete
+          sleep 86400
+        done
+    depends_on:
+      db:
+        condition: service_healthy
+    restart: unless-stopped
 volumes:
   pgdata:
