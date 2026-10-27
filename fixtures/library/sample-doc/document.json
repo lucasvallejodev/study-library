@@ -1,0 +1,35 @@
+{
+  "id": "sample-doc",
+  "title": "Sample Document",
+  "authors": [
+    "Study Library Fixtures"
+  ],
+  "kind": "book",
+  "source": {
+    "type": "markdown",
+    "file": "source/original.md",
+    "importedAt": "2026-10-27T10:00:00.000Z"
+  },
+  "chapters": [
+    {
+      "id": "ch-001",
+      "order": 1,
+      "title": "What Is a Log?",
+      "file": "chapters/001-what-is-a-log.md",
+      "contentHash": "sha256:df81e981d84e5a489f015b29bf9b43f7fb3e21461c3e4e02aa0891c83fed74a1",
+      "wordCount": 32,
+      "matter": "body",
+      "depth": 1
+    },
+    {
+      "id": "ch-002",
+      "order": 2,
+      "title": "Replication",
+      "file": "chapters/002-replication.md",
+      "contentHash": "sha256:9852fe8bd1a6573bd0e9d3786a67ae96b740f00552e0c974699c26a98b34151b",
+      "wordCount": 33,
+      "matter": "body",
+      "depth": 1
+    }
+  ]
+}
