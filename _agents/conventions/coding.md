@@ -20,6 +20,7 @@ The goal is code that reads well for humans. The rules come from the owner's oth
 - `type`, never `interface`. No `any` from JSON: type responses with the Zod schemas in `@study/core` or explicit types.
 - Library code (`packages/*/src`, `apps/web/src/lib`): `export const name = (input: Input): Output => …` arrow functions with explicit return types. Classes only where state is natural (`EpubBook`, `AssetStore`).
 - React components and Next.js pages stay `function` declarations; components are named exports. Pages read like an outline: load data through named helpers, render named sub-components, no computations inside JSX, no nested ternaries.
+- Never use the browser's `window.confirm`, `alert` or `prompt`. Ask through the app's dialogs: `const dialogs = useDialogs()` (from `components/dialogs/dialog-provider.tsx`, mounted in the root layout), then `await dialogs.confirm({ title, message, confirmLabel, tone: 'danger' })` or `await dialogs.prompt({ title, inputLabel, defaultValue })`. Reusable texts live in `components/dialogs/confirmations.ts`. Destructive dialogs focus Cancel; others focus the confirm button.
 - Files are kebab-case (`annotation-card.tsx`, `use-margin-layout.ts`).
 
 ## Naming and values
