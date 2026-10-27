@@ -135,6 +135,30 @@ body {
   margin: 0 0.4em 0 0;
 }
 
+/* Rich text note editor (TipTap) */
+.ProseMirror p.is-editor-empty:first-child::before {
+  color: var(--color-muted);
+  content: attr(data-placeholder);
+  float: left;
+  height: 0;
+  pointer-events: none;
+}
+.note-prose ul[data-type='taskList'] {
+  list-style: none;
+  padding-left: 0.25em;
+}
+.note-prose ul[data-type='taskList'] li {
+  align-items: flex-start;
+  display: flex;
+  gap: 0.5em;
+}
+.note-prose ul[data-type='taskList'] li > label {
+  margin-top: 0.2em;
+}
+.note-prose ul[data-type='taskList'] li > div > p {
+  margin: 0;
+}
+
 /* Shiki dual theme */
 .shiki,
 .shiki span {

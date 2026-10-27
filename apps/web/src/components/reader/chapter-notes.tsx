@@ -5,7 +5,7 @@ import { useState } from 'react';
 import type { Annotation } from '@study/core';
 
 import { studyPrompt } from '../annotations';
-import { MarkdownEditor } from '../notes/markdown-editor';
+import { NoteTextEditor } from '../notes/note-text-editor';
 import { AnnotationCard } from './annotation-card';
 import { AnnotationApi } from './api';
 
@@ -58,7 +58,7 @@ export function ChapterNotes(props: Props) {
         ))}
       </div>
       <div className="mt-3">
-        <MarkdownEditor
+        <NoteTextEditor
           value={draft}
           onChange={setDraft}
           onSubmit={() => void add()}

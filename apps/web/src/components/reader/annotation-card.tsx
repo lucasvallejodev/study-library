@@ -5,8 +5,8 @@ import { useState } from 'react';
 import type { Annotation, HighlightColor } from '@study/core';
 
 import { copyText, HighlightColors, quoteOf, tagHref } from '../annotations';
-import { MarkdownEditor } from '../notes/markdown-editor';
 import { type MarkdownSize, MarkdownView } from '../notes/markdown-view';
+import { NoteTextEditor } from '../notes/note-text-editor';
 import { TagInput } from '../notes/tag-input';
 import { forgetKnownTags } from '../notes/use-known-tags';
 import { AnnotationApi } from './api';
@@ -186,7 +186,7 @@ type NoteEditorProps = {
 function NoteEditor({ draft, onCancel, onDraftChange, onSave, rows, size }: NoteEditorProps) {
   return (
     <div className="mt-2 space-y-2">
-      <MarkdownEditor
+      <NoteTextEditor
         autoFocus
         value={draft.body}
         onChange={body => onDraftChange({ ...draft, body })}

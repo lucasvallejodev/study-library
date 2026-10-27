@@ -6,7 +6,7 @@ import { useState } from 'react';
 import { copyText } from '@/components/annotations';
 import { postJson } from '@/components/http';
 
-import { MarkdownEditor } from './notes/markdown-editor';
+import { NoteTextEditor } from './notes/note-text-editor';
 
 type ExportedDocument = {
   count: number;
@@ -42,7 +42,7 @@ export function FreeNoteForm() {
 
   return (
     <div className="mt-4">
-      <MarkdownEditor
+      <NoteTextEditor
         autoFocus
         value={body}
         onChange={setBody}
