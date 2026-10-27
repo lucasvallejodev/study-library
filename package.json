@@ -1,0 +1,33 @@
+{
+  "name": "study-library",
+  "private": true,
+  "type": "module",
+  "packageManager": "pnpm@10.18.0",
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "dev": "pnpm --filter @study/web dev",
+    "build": "pnpm --filter @study/web build",
+    "start": "pnpm --filter @study/web start",
+    "lib": "tsx --env-file-if-exists=.env packages/cli/src/index.ts",
+    "study": "tsx --env-file-if-exists=.env packages/cli/src/index.ts",
+    "test": "vitest run",
+    "typecheck": "pnpm -r --parallel typecheck",
+    "db:up": "docker compose up -d db",
+    "db:generate": "drizzle-kit generate",
+    "db:migrate": "tsx --env-file-if-exists=.env packages/core/src/db/migrate-cli.ts"
+  },
+  "devDependencies": {
+    "@types/node": "^22.18.0",
+    "drizzle-kit": "^0.31.4",
+    "tsx": "^4.20.5",
+    "typescript": "^5.9.2",
+    "vitest": "^3.2.4"
+  },
+  "dependencies": {
+    "@study/anchoring": "workspace:*",
+    "@study/core": "workspace:*",
+    "@study/ingest": "workspace:*"
+  }
+}

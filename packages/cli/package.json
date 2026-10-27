@@ -1,0 +1,8 @@
+{
+  "name": "@study/cli",
+  "private": true,
+  "type": "module",
+  "bin": { "lib": "src/index.ts" },
+  "scripts": { "typecheck": "tsc -p ." },
+  "dependencies": { "commander": "^14.0.0" }
+}
