@@ -2,7 +2,7 @@ import { eq, sql } from 'drizzle-orm';
 import type { Metadata } from 'next';
 import Link from 'next/link';
 
-import { DocumentActions } from '@/components/DocumentActions';
+import { DocumentActions } from '@/components/document-actions';
 import { Cover, ProgressBar } from '@/components/ui';
 import { documentPercent, documentProgress, getDocument } from '@/lib/data';
 import { getDb, t } from '@/lib/db';

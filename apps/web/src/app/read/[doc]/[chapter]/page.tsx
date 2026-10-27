@@ -1,7 +1,7 @@
 import { and, eq } from 'drizzle-orm';
 import type { Metadata } from 'next';
 
-import { Reader } from '@/components/reader/Reader';
+import { Reader } from '@/components/reader/reader';
 import { listAnnotations, loadChapter, toAnnotation } from '@/lib/data';
 import { getDb, t } from '@/lib/db';
 

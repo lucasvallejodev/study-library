@@ -4,7 +4,7 @@ import { useState } from 'react';
 
 import type { Annotation } from '@study/core';
 
-import { AnnotationCard } from './AnnotationCard';
+import { AnnotationCard } from './annotation-card';
 import { api } from './api';
 
 type Props = {

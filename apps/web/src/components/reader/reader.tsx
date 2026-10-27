@@ -13,11 +13,11 @@ import {
 } from '@study/anchoring';
 import type { Annotation, HighlightColor } from '@study/core';
 
-import { AnnotationCard } from './AnnotationCard';
+import { AnnotationCard } from './annotation-card';
 import { api } from './api';
-import { ChapterNotes } from './ChapterNotes';
+import { ChapterNotes } from './chapter-notes';
 import { clearHighlights, paintHighlights, supportsHighlights } from './paint';
-import { TocDrawer, type TocItem } from './TocDrawer';
+import { TocDrawer, type TocItem } from './toc-drawer';
 
 type Props = {
   chapter: { id: string; order: number; sourceUrl?: string; title: string; wordCount: number };

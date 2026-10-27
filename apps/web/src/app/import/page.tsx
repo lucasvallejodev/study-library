@@ -1,4 +1,4 @@
-import { ImportClient } from '@/components/ImportClient';
+import { ImportClient } from '@/components/import-client';
 
 export const metadata = { title: 'Import' };
 

@@ -1,6 +1,6 @@
 import Link from 'next/link';
 
-import { FreeNoteForm, NotebookItemActions } from '@/components/NotebookClient';
+import { FreeNoteForm, NotebookItemActions } from '@/components/notebook-client';
 import { relativeTime } from '@/components/ui';
 import { listAnnotations, toAnnotation } from '@/lib/data';
 import { listDocumentIds, readDocument } from '@study/core';
