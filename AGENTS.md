@@ -18,7 +18,6 @@ packages/cli/        `lib` command; talks ONLY to the web app's HTTP API (LIB_AP
 .claude/skills/      Claude Code skills (import-source, study, review, study-notes, highlight-notes, pdf-to-library, verify-mvp)
 _agents/             Docs for agents: product plan, architecture, contracts, runbooks, decisions, conventions
 fixtures/            Offline test inputs (saved HTML pages, images, Markdown)
-samples/             Public-domain Standard Ebooks EPUBs used by tests
 library/             Real content (git-ignored, one folder per document)
 _temp/               Scratch space for you and the user (git-ignored except .gitkeep)
 ```
@@ -29,7 +28,7 @@ _temp/               Scratch space for you and the user (git-ignored except .git
 pnpm install                 # Node 22+, pnpm 10 (corepack enable)
 pnpm db:up                   # Postgres 18 in Docker on 127.0.0.1:5433
 pnpm dev                     # web app on http://localhost:3000 (runs migrations + reindex on start)
-pnpm test                    # vitest: anchoring, epub samples, html fixtures, markdown, drm
+pnpm test                    # vitest: anchoring, generated EPUB, html fixtures, markdown, drm
 pnpm typecheck               # tsc in every package
 pnpm lint                    # ESLint (Prettier, style, naming, TSDoc, complexity rules); 0 errors, 0 warnings
 pnpm lint:fix                # apply Prettier, blank lines, sorting and every other automatic fix
@@ -61,4 +60,4 @@ System tools: `pandoc` (required for EPUB import) and `ebook-convert` from Calib
 
 ## Definition of done for a change
 
-Lint, typecheck and tests pass; if it touches the reader, check it in the browser (`pnpm dev`, open a chapter of `alices-adventures-in-wonderland`); if it touches a contract, `_agents/contracts/` is updated; if it changes how to run things, this file or `_agents/runbooks/` is updated. The `verify-mvp` skill runs the full end-to-end check.
+Lint, typecheck and tests pass; if it touches the reader, check it in the browser (`pnpm dev`, open a chapter of any imported document); if it touches a contract, `_agents/contracts/` is updated; if it changes how to run things, this file or `_agents/runbooks/` is updated. The `verify-mvp` skill runs the full end-to-end check.

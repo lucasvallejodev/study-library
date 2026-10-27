@@ -5,7 +5,6 @@ coverage
 pnpm-lock.yaml
 library
 _temp
-samples
 fixtures
 backups
 packages/core/drizzle

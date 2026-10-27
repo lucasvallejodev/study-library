@@ -1,4 +1,4 @@
-import { existsSync, readdirSync } from 'node:fs';
+import { existsSync } from 'node:fs';
 import { mkdtemp, readFile } from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
@@ -6,13 +6,6 @@ import path from 'node:path';
 import type { Fetcher } from '../src/url';
 
 export const repo = path.resolve(import.meta.dirname, '../../..');
-
-export const sample = (prefix: string) =>
-  path.join(
-    repo,
-    'samples',
-    readdirSync(path.join(repo, 'samples')).find(fileName => fileName.startsWith(prefix))!
-  );
 
 export async function useTempLibrary(): Promise<string> {
   const dir = await mkdtemp(path.join(os.tmpdir(), 'study-test-lib-'));

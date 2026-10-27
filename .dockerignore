@@ -4,6 +4,5 @@
 library
 _temp
 backups
-samples
 .env
 **/.env.local

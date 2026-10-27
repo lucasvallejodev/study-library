@@ -17,10 +17,10 @@ pnpm db:up          # Postgres 18 on 127.0.0.1:5433
 pnpm dev            # http://localhost:3000
 ```
 
-Import the bundled public-domain samples:
+Import a book or article:
 
 ```bash
-for f in samples/*.epub; do pnpm -s lib import "$f"; done
+pnpm -s lib import path/to/book.epub
 ```
 
 Or drop files on http://localhost:3000/import, or paste a URL there.
@@ -49,7 +49,7 @@ Three services: `app` (Next.js + Calibre + Pandoc), `db` (Postgres 18), `backup`
 
 Open this folder in Claude Code (the server must be running; from another machine set `LIB_API_URL=http://homeserver:3000` in `.env`):
 
-- `/study alices-adventures-in-wonderland ch-006` — 5–8 questions, one at a time, from recall to application, using your highlights. The session and any "review later" questions are saved; the questions appear in the reader's margin.
+- `/study <doc> <chapter>` — 5–8 questions, one at a time, from recall to application, using your highlights. The session and any "review later" questions are saved; the questions appear in the reader's margin.
 - `/review 7` — mixed review of the last week's highlights and missed answers.
 - "Make study notes for chapter 3" (`study-notes`), "Import this PDF" (`pdf-to-library`), "Import this URL and clean it up" (`import-source`).
 - The **Ask Claude** button in the reader copies a ready `/study … --focus <highlight>` prompt.
@@ -64,6 +64,6 @@ CLI reference: `pnpm -s lib --help` or `_agents/contracts/cli.md`.
 
 See `AGENTS.md` (also read by Claude Code via `CLAUDE.md`) and the `_agents/` knowledge base: product plan and roadmap, architecture, contracts, runbooks, decisions and conventions.
 
-## License of the samples
+## Content and DRM
 
-The books in `samples/` are public-domain editions from [Standard Ebooks](https://standardebooks.org) (CC0). Only import content you have the right to use; this tool does not and will not remove DRM.
+Only import content you have the right to use; this tool does not and will not remove DRM. Public-domain editions from [Standard Ebooks](https://standardebooks.org) are a good way to try it.

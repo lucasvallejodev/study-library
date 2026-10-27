@@ -70,7 +70,6 @@ const config = [
       'coverage/**',
       'library/**',
       '_temp/**',
-      'samples/**',
       'fixtures/**',
       'backups/**',
       'packages/core/drizzle/**',
