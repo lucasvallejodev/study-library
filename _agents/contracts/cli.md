@@ -8,7 +8,7 @@ Run from the repo root as `pnpm -s lib <command>` (the `-s` keeps pnpm's banner 
 | `show <doc>` | `document.json` + progress and annotation counts per chapter |
 | `chapter <doc> <ch> [-a]` | Chapter Markdown; `-a/--with-annotations` inlines highlights `==text==[^a-id]` with notes and deep links (Markdown output) |
 | `annotations [doc] [-c ch] [-s 7d] [-t types] [--tag t] [-q text] [-f md]` | Highlights/notes; `-f md` groups them with deep links |
-| `add-note <doc> [ch] [-q quote] [-b body] [-t note\|highlight\|ai_question\|bookmark] [--color c] [--tags a,b]` | Create; `--quote` anchors to the passage (fuzzy tolerant) and prints the deep link |
+| `add-note <doc> [ch] [-q quote \| --on a-id] [-b body] [-t note\|highlight\|ai_question\|bookmark] [--color c] [--tags a,b]` | Create; `--quote` anchors to the passage (fuzzy tolerant); `--on` reuses an existing annotation's passage and chapter; prints the deep link |
 | `edit-note <id> [-b] [--tags] [--color] [-t]` / `delete-note <id>` | Change / remove |
 | `record-session <doc> [ch] -f file.json\|- [-k study\|review]` | Save `{questions:[{question,answer,feedback,correct,quote,annotationId}], score, summary, followUps}` |
 | `sessions [doc] [-c ch] [-s 30d]` | Past sessions |

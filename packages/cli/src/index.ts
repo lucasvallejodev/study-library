@@ -119,18 +119,22 @@ program
   .command("add-note <doc> [chapter]")
   .description("Add a note, highlight or AI question; --quote anchors it to a passage")
   .option("-q, --quote <text>", "exact passage from the chapter (small differences are tolerated)")
+  .option("--on <annotation-id>", "attach to the same passage as an existing highlight (like a reply in the margin)")
   .option("-b, --body <markdown>", "note text")
   .option("-t, --type <type>", "highlight | note | ai_question | bookmark", "note")
   .option("--color <color>", "yellow | green | blue | pink")
   .option("--tags <tags>", "comma separated")
   .action(async (doc, chapter, o) => {
+    const target = o.on ? await request<Annotation>(`/api/annotations/${o.on}`) : undefined;
+    if (target) chapter = target.chapterId ?? chapter;
     const created = await request<Annotation>("/api/annotations", {
       method: "POST",
       json: {
         documentId: doc,
         chapterId: chapter ?? null,
         type: o.type,
-        quote: o.quote,
+        selectors: target?.selectors ?? [],
+        quote: target ? undefined : o.quote,
         body: o.body ?? null,
         color: o.color ?? null,
         tags: o.tags ? String(o.tags).split(",").map((s: string) => s.trim()).filter(Boolean) : [],
