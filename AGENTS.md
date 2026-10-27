@@ -12,7 +12,7 @@ Read `_agents/README.md` for the full knowledge base before larger changes.
 apps/web/            Next.js 16 (App Router) reader + HTTP API (src/app/api/*) + import job queue
 packages/core/       THE CONTRACT: Zod schemas (document.json, frontmatter, annotations, selectors),
                      library path helpers, Drizzle schema + migrations (packages/core/drizzle), indexer
-packages/ingest/     Importers: epub.ts, calibre.ts (MOBI/AZW), url.ts (Defuddle), markdown.ts, writer.ts
+packages/ingest/     Importers: epub-*.ts (EPUB), calibre.ts (MOBI/AZW), url.ts (Defuddle), markdown.ts, writer.ts
 packages/anchoring/  W3C TextQuote/TextPosition selectors, fuzzy re-anchoring, DOM range helpers
 packages/cli/        `lib` command; talks ONLY to the web app's HTTP API (LIB_API_URL)
 .claude/skills/      Claude Code skills (import-source, study, review, study-notes, highlight-notes, pdf-to-library, verify-mvp)
@@ -31,6 +31,9 @@ pnpm db:up                   # Postgres 18 in Docker on 127.0.0.1:5433
 pnpm dev                     # web app on http://localhost:3000 (runs migrations + reindex on start)
 pnpm test                    # vitest: anchoring, epub samples, html fixtures, markdown, drm
 pnpm typecheck               # tsc in every package
+pnpm lint                    # ESLint (Prettier, style, naming, TSDoc, complexity rules); 0 errors, 0 warnings
+pnpm lint:fix                # apply Prettier, blank lines, sorting and every other automatic fix
+pnpm lint:dupes; pnpm knip   # advisory: duplicated code, unused files/exports/dependencies
 pnpm -s lib --help           # CLI (use -s so pnpm does not print its banner into JSON output)
 pnpm db:generate --name x    # new migration after editing packages/core/src/db/schema.ts
 docker compose up -d --build # full deploy: app + db + nightly backup
@@ -46,16 +49,16 @@ System tools: `pandoc` (required for EPUB import) and `ebook-convert` from Calib
 4. Put temporary files in `_temp/` (e.g. `_temp/edit/<doc>` for `lib pull`). Never commit anything from `library/` or `_temp/`.
 5. New importers live in `packages/ingest/src/`, are dispatched from `importSource()` in `index.ts`, end in `writeLibraryDocument()` and must write `import-report.json` warnings instead of failing on recoverable problems. Add an offline test under `packages/ingest/test/`.
 6. API routes wrap handlers in `route()` (`apps/web/src/lib/http.ts`) for JSON errors. The CLI must keep working against a remote server, so never make it read `library/` directly.
-7. Tests must run offline. Use `fixtures/` and the `fixtureFetcher` helper, not live websites.
+7. Tests must run offline. Use `fixtures/` and the `fixtureImageFetcherWith404Fallback` helper, not live websites.
 8. Only DRM-free content. Never add DRM removal.
-9. Match the surrounding code: TypeScript strict, ESM, small modules, comments only for the non-obvious "why".
+9. Follow the code style in `_agents/conventions/coding.md` (enforced by `pnpm lint`): no comments (names carry the intent; TSDoc only on exported library functions), no magic numbers or one-letter names, regexes only in a package's `patterns.ts`, arrow functions with return types in library code, small functions and files. Run `pnpm lint:fix` after editing.
 
 ## Git
 
 - Conventional Commits: `feat(scope): …`, `fix(scope): …`, `docs: …`, `test(scope): …`, `build: …`, `chore: …`, `refactor(scope): …`. Scopes: `core`, `ingest`, `anchoring`, `web`, `cli`, `skills`, `agents`.
 - Commits are authored by the repository owner's git identity. **Do not add `Co-Authored-By` trailers or any AI attribution** to commits or PRs.
-- One logical change per commit; run `pnpm test` and `pnpm typecheck` before committing.
+- One logical change per commit; run `pnpm lint`, `pnpm typecheck` and `pnpm test` before committing.
 
 ## Definition of done for a change
 
-Tests and typecheck pass; if it touches the reader, check it in the browser (`pnpm dev`, open a chapter of `alices-adventures-in-wonderland`); if it touches a contract, `_agents/contracts/` is updated; if it changes how to run things, this file or `_agents/runbooks/` is updated. The `verify-mvp` skill runs the full end-to-end check.
+Lint, typecheck and tests pass; if it touches the reader, check it in the browser (`pnpm dev`, open a chapter of `alices-adventures-in-wonderland`); if it touches a contract, `_agents/contracts/` is updated; if it changes how to run things, this file or `_agents/runbooks/` is updated. The `verify-mvp` skill runs the full end-to-end check.

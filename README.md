@@ -56,6 +56,10 @@ Open this folder in Claude Code (the server must be running; from another machin
 
 CLI reference: `pnpm -s lib --help` or `_agents/contracts/cli.md`.
 
+## Code style
+
+`pnpm lint` (ESLint with Prettier) enforces the code style described in `_agents/conventions/coding.md`; `pnpm lint:fix` applies the automatic fixes.
+
 ## Project layout
 
 See `AGENTS.md` (also read by Claude Code via `CLAUDE.md`) and the `_agents/` knowledge base: product plan and roadmap, architecture, contracts, runbooks, decisions and conventions.

@@ -4,7 +4,7 @@ Entry: `importSource(input, { id?, tocDepth?, db?, log?, fetcher?, sourceUrl? })
 
 | Input                   | Importer                 | Notes                                                                                                                                    |
 | ----------------------- | ------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------- |
-| `.epub`                 | `epub.ts`                | Own parser (JSZip + fast-xml-parser + jsdom)                                                                                             |
+| `.epub`                 | `epub-*.ts`              | Own parser (JSZip + fast-xml-parser + jsdom)                                                                                             |
 | `.mobi .azw .azw3 .prc` | `calibre.ts` → EPUB path | DRM check reads the MOBI header (record 0, bytes 12–13) before calling `ebook-convert`                                                   |
 | `http(s)://…`           | `url.ts`                 | fetch → Defuddle (Markdown) → images downloaded → split at `##` over 8,000 words; Playwright retry when < 80 words (optional dependency) |
 | `.html`                 | `url.ts`                 | Saved page; uses `<link rel=canonical>` or `--source-url` as base URL                                                                    |
@@ -12,6 +12,8 @@ Entry: `importSource(input, { id?, tocDepth?, db?, log?, fetcher?, sourceUrl? })
 | `.pdf`                  | —                        | Not yet: use the `pdf-to-library` skill (Claude converts to `.md`, then imports)                                                         |
 
 ## EPUB algorithm (`sliceChapters` + `convertEpub`)
+
+Modules: `epub-package.ts` (container, OPF, DRM check) → `epub-book.ts` (`EpubBook`) → `epub-toc.ts` (nav/NCX) → `epub-chapter-starts.ts` + `epub-matter.ts` → `epub-slicing.ts` (`sliceChapters`, `foldTitleOnlyPartPages`) → `epub-convert.ts` (`convertEpub`) with `epub-footnotes.ts`, `epub-images.ts`, `html.ts` (`cleanHtml`) and `writer.ts` (`tidyMarkdown`). `epub.ts` re-exports the public pieces.
 
 1. `container.xml` → OPF → metadata, manifest, spine, cover (`properties="cover-image"` or `<meta name="cover">`). `META-INF/encryption.xml` with anything other than font obfuscation ⇒ DRM error.
 2. TOC: EPUB 3 `nav[epub:type~=toc]`, else NCX. Entries are flattened with depth.

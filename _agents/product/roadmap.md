@@ -4,16 +4,16 @@ Last updated: 2026-10-27.
 
 ## v0.1 MVP — done
 
-| Milestone              | Status | Where                                                                                                                      |
-| ---------------------- | ------ | -------------------------------------------------------------------------------------------------------------------------- |
-| M0 Scaffold + contract | Done   | `packages/core` (schemas, Drizzle schema, migration `0000_init`), `docker-compose.yml`                                     |
-| M1 EPUB + MOBI ingest  | Done   | `packages/ingest/src/epub.ts`, `calibre.ts`; tests import all 4 samples; MOBI verified through Calibre in the Docker image |
-| M2 Reader              | Done   | `apps/web/src/app/read/**`, `components/reader/*`                                                                          |
-| M5 URL ingest          | Done   | `packages/ingest/src/url.ts`; offline tests over `fixtures/html` (blog, docs, news, JS-heavy, image-heavy)                 |
-| M3 Annotations         | Done   | Highlights (4 colors), notes, chapter notes, bookmarks, tags, deep links, orphans, notebook                                |
-| M4 Import UI + jobs    | Done   | `/import`, `apps/web/src/lib/jobs.ts` (in-process queue in `import_jobs`, resumes after restart)                           |
-| M6 CLI + skills        | Done   | `packages/cli`, `.claude/skills/*`                                                                                         |
-| M7 Search + export     | Done   | `/search`, `GET /api/search`, `lib export`, notebook "Back up all annotations"                                             |
+| Milestone              | Status | Where                                                                                                                        |
+| ---------------------- | ------ | ---------------------------------------------------------------------------------------------------------------------------- |
+| M0 Scaffold + contract | Done   | `packages/core` (schemas, Drizzle schema, migration `0000_init`), `docker-compose.yml`                                       |
+| M1 EPUB + MOBI ingest  | Done   | `packages/ingest/src/epub-*.ts`, `calibre.ts`; tests import all 4 samples; MOBI verified through Calibre in the Docker image |
+| M2 Reader              | Done   | `apps/web/src/app/read/**`, `components/reader/*`                                                                            |
+| M5 URL ingest          | Done   | `packages/ingest/src/url.ts`; offline tests over `fixtures/html` (blog, docs, news, JS-heavy, image-heavy)                   |
+| M3 Annotations         | Done   | Highlights (4 colors), notes, chapter notes, bookmarks, tags, deep links, orphans, notebook                                  |
+| M4 Import UI + jobs    | Done   | `/import`, `apps/web/src/lib/jobs.ts` (in-process queue in `import_jobs`, resumes after restart)                             |
+| M6 CLI + skills        | Done   | `packages/cli`, `.claude/skills/*`                                                                                           |
+| M7 Search + export     | Done   | `/search`, `GET /api/search`, `lib export`, notebook "Back up all annotations"                                               |
 
 Extras beyond the plan: Markdown file import (`.md`, split at `#` headings) used by the `pdf-to-library` skill; `lib pull`/`lib push` edit bundles for AI cleanup; the `review`, `study-notes` and `verify-mvp` skills; `ai_question` annotations already show in the reader margin (planned for v0.2).
 

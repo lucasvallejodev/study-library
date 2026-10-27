@@ -1,6 +1,6 @@
 # Reader and anchoring
 
-Files: `apps/web/src/components/reader/{Reader,AnnotationCard,ChapterNotes,TocDrawer,paint,api}.tsx?`, `packages/anchoring/src/*`.
+Files: `apps/web/src/components/reader/` — `reader.tsx` composes the hooks (`use-anchored-annotations`, `use-margin-layout`, `use-reading-progress`, `use-selection-popover`, `use-deep-link`, `use-chapter-keyboard`, `use-article-click`, …) and components (`article.tsx`, `margin-notes.tsx`, `selection-popover.tsx`, `notes-sheet.tsx`, `annotation-card.tsx`, `toc-drawer.tsx`, …); painting in `paint.ts`. Anchoring logic: `packages/anchoring/src/*`.
 
 ## Text model
 
@@ -30,7 +30,7 @@ CSS Custom Highlight API (`CSS.highlights`): one `Highlight` per color plus `hl-
 
 ## Layout: Google Docs-style margin
 
-≥1280px: three columns (spacer | 680px article | margin ≥300px). Each margin card is absolutely positioned beside its passage: the layout effect in `Reader.tsx` measures every range's top and every card's height, pins the selected/edited card exactly beside its passage, and pushes the others down (below it) or up (above it) so nothing overlaps. It re-runs on resize and when the article changes size (lazy images, via `ResizeObserver`).
+≥1280px: three columns (spacer | 680px article | margin ≥300px). Each margin card is absolutely positioned beside its passage: `use-margin-layout.ts` measures every range's top and every card's height, pins the selected/edited card exactly beside its passage, and pushes the others down (below it) or up (above it) so nothing overlaps. It re-runs on resize and when the article changes size (lazy images, via `ResizeObserver`).
 
 - Margin shows annotations with a note, Claude's questions, and the selected highlight; the "With notes / All highlights" toggle (remembered in localStorage) shows every highlight.
 - Several annotations on the same passage stack like a thread: e.g. the user's highlight + note, then "Claude's note" (`type=note`, no color, tag `claude`, same selectors via `lib add-note --on <id>`), which only underlines the passage.

@@ -10,6 +10,7 @@ Run the steps that match what changed; run all of them before a release. Report 
 ## 1. Static checks and tests
 
 ```bash
+pnpm lint        # 0 errors, 0 warnings
 pnpm typecheck
 pnpm test        # anchoring, 4 sample EPUBs, 5 HTML fixtures, Markdown, DRM detection
 ```
