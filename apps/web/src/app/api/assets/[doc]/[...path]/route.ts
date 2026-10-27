@@ -4,7 +4,7 @@ import path from 'node:path';
 import { notFound, route } from '@/lib/http';
 import { resolveInDocument } from '@study/core';
 
-const TYPES: Record<string, string> = {
+const ImageContentTypes: Record<string, string> = {
   '.avif': 'image/avif',
   '.gif': 'image/gif',
   '.jpeg': 'image/jpeg',
@@ -14,24 +14,29 @@ const TYPES: Record<string, string> = {
   '.webp': 'image/webp',
 };
 
+const ASSETS_FOLDER = 'assets';
+const FALLBACK_CONTENT_TYPE = 'application/octet-stream';
+const CACHE_FOREVER_SINCE_NAMES_ARE_CONTENT_HASHED = 'public, max-age=31536000, immutable';
+const NoScriptsInImportedSvg = { 'content-security-policy': "script-src 'none'" };
+
 type Ctx = { params: Promise<{ doc: string; path: string[] }> };
 
-/** Serves library/<doc>/assets/* (content-hashed names, so cache forever). */
+const assetHeaders = (extension: string): Record<string, string> => ({
+  'cache-control': CACHE_FOREVER_SINCE_NAMES_ARE_CONTENT_HASHED,
+  'content-type': ImageContentTypes[extension] ?? FALLBACK_CONTENT_TYPE,
+  ...(extension === '.svg' ? NoScriptsInImportedSvg : {}),
+});
+
 export const GET = route(async (_req: Request, { params }: Ctx) => {
   const { doc, path: parts } = await params;
 
-  if (parts[0] !== 'assets') notFound('Asset');
+  if (parts[0] !== ASSETS_FOLDER) notFound('Asset');
+
   const file = resolveInDocument(doc, parts.join('/'));
 
   await stat(file);
-  const ext = path.extname(file).toLowerCase();
 
-  return new Response(new Uint8Array(await readFile(file)), {
-    headers: {
-      'cache-control': 'public, max-age=31536000, immutable',
-      'content-type': TYPES[ext] ?? 'application/octet-stream',
-      // SVGs from imported books must never run scripts.
-      ...(ext === '.svg' ? { 'content-security-policy': "script-src 'none'" } : {}),
-    },
-  });
+  const extension = path.extname(file).toLowerCase();
+
+  return new Response(new Uint8Array(await readFile(file)), { headers: assetHeaders(extension) });
 });

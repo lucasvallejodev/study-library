@@ -4,16 +4,16 @@ import { z } from 'zod';
 import { saveProgress } from '@/lib/data';
 import { route } from '@/lib/http';
 
-const Body = z.object({
+const ProgressBodySchema = z.object({
   chapterId: z.string(),
   documentId: z.string(),
   position: z.number(),
 });
 
 export const POST = route(async (req: Request) => {
-  const body = Body.parse(await req.json());
+  const { chapterId, documentId, position } = ProgressBodySchema.parse(await req.json());
 
-  await saveProgress(body.documentId, body.chapterId, body.position);
+  await saveProgress(documentId, chapterId, position);
 
   return NextResponse.json({ ok: true });
 });

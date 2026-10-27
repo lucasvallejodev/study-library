@@ -18,7 +18,9 @@ export const PUT = route(async (req: Request, { params }: Ctx) => {
   const { doc } = await params;
 
   await getDocument(doc);
-  const updated = await writeBundle(doc, BundleInputSchema.parse(await req.json()));
+
+  const bundle = BundleInputSchema.parse(await req.json());
+  const updated = await writeBundle(doc, bundle);
 
   return NextResponse.json({ chapters: updated.chapters.length, ok: true });
 });

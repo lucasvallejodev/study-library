@@ -1,34 +1,34 @@
 import { NextResponse } from 'next/server';
 
-import { createAnnotation, listAnnotations, toAnnotation } from '@/lib/data';
-import { parseSince, route } from '@/lib/http';
+import { type AnnotationFilter, createAnnotation, listAnnotations, toAnnotation } from '@/lib/data';
+import { HttpStatus, parseSince, route } from '@/lib/http';
+import { isFlagSet, optionalNumberParam, optionalParam, searchParamsOf } from '@/lib/search-params';
 import { NewAnnotationSchema } from '@study/core';
 
 export const dynamic = 'force-dynamic';
 
-/** GET /api/annotations?doc=&chapter=&type=highlight,note&color=&tag=&since=7d&q=&free=1 */
-export const GET = route(async (req: Request) => {
-  const p = new URL(req.url).searchParams;
+const parseAnnotationFilter = (params: URLSearchParams): AnnotationFilter => ({
+  chapterId: optionalParam(params, 'chapter'),
+  color: optionalParam(params, 'color'),
+  documentId: optionalParam(params, 'doc'),
+  free: isFlagSet(params, 'free'),
+  limit: optionalNumberParam(params, 'limit'),
+  q: optionalParam(params, 'q'),
+  since: parseSince(params.get('since')),
+  tag: optionalParam(params, 'tag'),
+  type: optionalParam(params, 'type'),
+});
 
-  const rows = await listAnnotations({
-    chapterId: p.get('chapter') ?? undefined,
-    color: p.get('color') ?? undefined,
-    documentId: p.get('doc') ?? undefined,
-    free: p.get('free') === '1',
-    limit: p.get('limit') ? Number(p.get('limit')) : undefined,
-    q: p.get('q') ?? undefined,
-    since: parseSince(p.get('since')),
-    tag: p.get('tag') ?? undefined,
-    type: p.get('type') ?? undefined,
-  });
+export const GET = route(async (req: Request) => {
+  const filter = parseAnnotationFilter(searchParamsOf(req));
+  const rows = await listAnnotations(filter);
 
   return NextResponse.json(rows.map(toAnnotation));
 });
 
-/** POST /api/annotations — selectors from the reader, or `quote` from CLI/AI callers. */
 export const POST = route(async (req: Request) => {
   const input = NewAnnotationSchema.parse(await req.json());
   const row = await createAnnotation(input);
 
-  return NextResponse.json(toAnnotation(row), { status: 201 });
+  return NextResponse.json(toAnnotation(row), { status: HttpStatus.created });
 });

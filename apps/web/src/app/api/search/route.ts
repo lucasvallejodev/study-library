@@ -1,15 +1,22 @@
 import { NextResponse } from 'next/server';
 
 import { search, toAnnotation } from '@/lib/data';
-import { HttpError, route } from '@/lib/http';
+import { badRequest, route } from '@/lib/http';
+import { searchParamsOf } from '@/lib/search-params';
 
 export const dynamic = 'force-dynamic';
 
+const requiredSearchText = (params: URLSearchParams): string => {
+  const text = params.get('q')?.trim();
+
+  if (!text) return badRequest('Missing q');
+
+  return text;
+};
+
 export const GET = route(async (req: Request) => {
-  const q = new URL(req.url).searchParams.get('q')?.trim();
+  const text = requiredSearchText(searchParamsOf(req));
+  const results = await search(text);
 
-  if (!q) throw new HttpError(400, 'Missing q');
-  const res = await search(q);
-
-  return NextResponse.json({ ...res, notes: res.notes.map(toAnnotation) });
+  return NextResponse.json({ ...results, notes: results.notes.map(toAnnotation) });
 });

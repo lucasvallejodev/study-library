@@ -3,18 +3,22 @@ import { NextResponse } from 'next/server';
 import { getDocument } from '@/lib/data';
 import { getDb } from '@/lib/db';
 import { route } from '@/lib/http';
+import { readOptionalJson } from '@/lib/search-params';
 import { indexDocument, reindexLibrary } from '@study/core/db';
 
-/** POST /api/reindex {doc?} — rebuild DB rows from library/ (annotations untouched). */
+type ReindexRequest = { doc?: string };
+
+const reindexOneDocument = async (docId: string): Promise<Response> => {
+  await getDocument(docId);
+  await indexDocument(getDb(), docId);
+
+  return NextResponse.json({ indexed: [docId], removed: [] });
+};
+
 export const POST = route(async (req: Request) => {
-  const body = (await req.json().catch(() => ({}))) as { doc?: string };
+  const { doc } = await readOptionalJson<ReindexRequest>(req);
 
-  if (body.doc) {
-    await getDocument(body.doc);
-    await indexDocument(getDb(), body.doc);
-
-    return NextResponse.json({ indexed: [body.doc], removed: [] });
-  }
+  if (doc) return reindexOneDocument(doc);
 
   return NextResponse.json(await reindexLibrary(getDb()));
 });

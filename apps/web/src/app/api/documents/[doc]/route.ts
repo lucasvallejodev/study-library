@@ -1,11 +1,9 @@
-import { eq, sql } from 'drizzle-orm';
 import { NextResponse } from 'next/server';
-import { rm } from 'node:fs/promises';
 
 import { documentProgress, getDocument } from '@/lib/data';
-import { getDb, t } from '@/lib/db';
-import { HttpError, route } from '@/lib/http';
-import { documentDir } from '@study/core';
+import { chapterAnnotationCounts, deleteDocument } from '@/lib/documents';
+import { route } from '@/lib/http';
+import { isFlagSet, searchParamsOf } from '@/lib/search-params';
 
 type Ctx = { params: Promise<{ doc: string }> };
 
@@ -13,47 +11,21 @@ export const GET = route(async (_req: Request, { params }: Ctx) => {
   const { doc: id } = await params;
   const doc = await getDocument(id);
   const progress = await documentProgress(id);
-
-  const counts = await getDb()
-    .select({ chapterId: t.annotations.chapterId, n: sql<number>`count(*)::int` })
-    .from(t.annotations)
-    .where(eq(t.annotations.documentId, id))
-    .groupBy(t.annotations.chapterId);
+  const counts = await chapterAnnotationCounts(id);
 
   return NextResponse.json({
     ...doc,
-    chapters: doc.chapters.map(c => ({
-      ...c,
-      annotationCount: counts.find(x => x.chapterId === c.id)?.n ?? 0,
-      percent: progress.find(p => p.chapterId === c.id)?.percent ?? 0,
+    chapters: doc.chapters.map(chapter => ({
+      ...chapter,
+      annotationCount: counts.find(entry => entry.chapterId === chapter.id)?.count ?? 0,
+      percent: progress.find(row => row.chapterId === chapter.id)?.percent ?? 0,
     })),
   });
 });
 
-/** DELETE /api/documents/:doc?force=1 — refuses while annotations exist unless forced. */
 export const DELETE = route(async (req: Request, { params }: Ctx) => {
   const { doc: id } = await params;
+  const force = isFlagSet(searchParamsOf(req), 'force');
 
-  await getDocument(id);
-  const force = new URL(req.url).searchParams.get('force') === '1';
-  const db = getDb();
-
-  const [{ n }] = (await db
-    .select({ n: sql<number>`count(*)::int` })
-    .from(t.annotations)
-    .where(eq(t.annotations.documentId, id))) as [{ n: number }];
-
-  if (n > 0 && !force) {
-    throw new HttpError(
-      409,
-      `${id} has ${n} annotations. Export them first (lib export ${id}) or pass force=1.`
-    );
-  }
-
-  await db.delete(t.annotations).where(eq(t.annotations.documentId, id));
-  await db.delete(t.readingProgress).where(eq(t.readingProgress.documentId, id));
-  await db.delete(t.documents).where(eq(t.documents.id, id));
-  await rm(documentDir(id), { force: true, recursive: true });
-
-  return NextResponse.json({ annotationsDeleted: n, deleted: id });
+  return NextResponse.json(await deleteDocument(id, force));
 });

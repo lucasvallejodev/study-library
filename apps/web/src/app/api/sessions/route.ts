@@ -1,26 +1,28 @@
 import { NextResponse } from 'next/server';
 
-import { createSession, listSessions } from '@/lib/data';
-import { parseSince, route } from '@/lib/http';
+import { createSession, listSessions, type SessionFilter } from '@/lib/data';
+import { HttpStatus, parseSince, route } from '@/lib/http';
+import { optionalParam, searchParamsOf } from '@/lib/search-params';
 import { StudySessionInputSchema } from '@study/core';
 
 export const dynamic = 'force-dynamic';
 
-/** GET /api/sessions?doc=&chapter=&since=14d */
-export const GET = route(async (req: Request) => {
-  const p = new URL(req.url).searchParams;
+const parseSessionFilter = (params: URLSearchParams): SessionFilter => ({
+  chapterId: optionalParam(params, 'chapter'),
+  documentId: optionalParam(params, 'doc'),
+  since: parseSince(params.get('since')),
+});
 
-  const rows = await listSessions({
-    chapterId: p.get('chapter') ?? undefined,
-    documentId: p.get('doc') ?? undefined,
-    since: parseSince(p.get('since')),
-  });
+export const GET = route(async (req: Request) => {
+  const filter = parseSessionFilter(searchParamsOf(req));
+  const rows = await listSessions(filter);
 
   return NextResponse.json(rows);
 });
 
 export const POST = route(async (req: Request) => {
   const input = StudySessionInputSchema.parse(await req.json());
+  const session = await createSession(input);
 
-  return NextResponse.json(await createSession(input), { status: 201 });
+  return NextResponse.json(session, { status: HttpStatus.created });
 });

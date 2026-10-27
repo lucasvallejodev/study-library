@@ -10,6 +10,7 @@ import {
   contentHash,
   countWords,
   DocumentSchema,
+  type ImportReport,
   type LibraryDocument,
   parseChapterFile,
   readDocument,
@@ -19,27 +20,64 @@ import {
 import { indexDocument } from '@study/core/db';
 
 import { getDb } from './db';
-import { HttpError } from './http';
+import { badRequest } from './http';
+import { readImportReport } from './import-report';
 
-/**
- * Everything an agent needs to edit a document: document.json, chapter files, import report.
- *
- * @param docId
- */
-export const readBundle = async (docId: string) => {
-  const document = await readDocument(docId);
+/** Everything an agent needs to edit a document. */
+export type DocumentBundle = {
+  assets: string[];
+  document: LibraryDocument;
+  files: Record<string, string>;
+  report: ImportReport | null;
+};
+
+/** Body of `PUT /api/documents/:doc/bundle`: the edited `document.json` and chapter files. */
+export const BundleInputSchema = z.object({
+  document: z.unknown(),
+  files: z.record(z.string(), z.string()),
+});
+
+/** A parsed {@link BundleInputSchema} body. */
+export type BundleInput = z.infer<typeof BundleInputSchema>;
+
+type ChapterCandidate = Record<string, unknown>;
+
+type PreparedChapter = {
+  body: string;
+  entry: ChapterCandidate;
+};
+
+const ASSETS_DIR = 'assets';
+const CHAPTERS_DIR = 'chapters';
+
+const readChapterFiles = async (document: LibraryDocument): Promise<Record<string, string>> => {
   const files: Record<string, string> = {};
 
-  for (const ch of document.chapters) {
-    files[ch.file] = await readFile(resolveInDocument(docId, ch.file), 'utf8');
+  for (const chapter of document.chapters) {
+    files[chapter.file] = await readFile(resolveInDocument(document.id, chapter.file), 'utf8');
   }
 
-  const reportPath = resolveInDocument(docId, 'import-report.json');
-  const report = existsSync(reportPath) ? JSON.parse(await readFile(reportPath, 'utf8')) : null;
+  return files;
+};
 
-  const assets = existsSync(resolveInDocument(docId, 'assets'))
-    ? await readdir(resolveInDocument(docId, 'assets'))
-    : [];
+const listAssets = async (docId: string): Promise<string[]> => {
+  const assetsDir = resolveInDocument(docId, ASSETS_DIR);
+
+  return existsSync(assetsDir) ? readdir(assetsDir) : [];
+};
+
+/**
+ * Reads everything an agent needs to edit a document: `document.json`, chapter files, the
+ * import report and the asset file names.
+ *
+ * @param docId - Document slug.
+ * @returns The bundle; chapter files are keyed by their path inside the document folder.
+ */
+export const readBundle = async (docId: string): Promise<DocumentBundle> => {
+  const document = await readDocument(docId);
+  const files = await readChapterFiles(document);
+  const report = await readImportReport(docId);
+  const assets = await listAssets(docId);
 
   return {
     assets,
@@ -49,92 +87,117 @@ export const readBundle = async (docId: string) => {
   };
 };
 
-export const BundleInputSchema = z.object({
-  document: z.unknown(),
-  files: z.record(z.string(), z.string()),
-});
+const chapterCandidates = (candidate: ChapterCandidate | null): ChapterCandidate[] =>
+  Array.isArray(candidate?.chapters) ? (candidate.chapters as ChapterCandidate[]) : [];
 
-/**
- * Apply an edited bundle: validates document.json, rewrites chapter frontmatter, recomputes
- * hashes and word counts, deletes chapter files no longer listed, and re-indexes.
- * Chapter ids must stay stable for existing chapters, or their annotations lose their place.
- *
- * @param docId
- * @param input
- */
-export const writeBundle = async (
-  docId: string,
-  input: z.infer<typeof BundleInputSchema>
-): Promise<LibraryDocument> => {
-  const candidate = input.document as Record<string, unknown>;
+const prepareChapter = (
+  entry: ChapterCandidate,
+  index: number,
+  files: BundleInput['files']
+): PreparedChapter => {
+  const file = String((entry.file as string | undefined) ?? '');
+  const raw = files[file] as string | undefined;
 
-  // Hashes and counts are derived, so callers may omit them.
-  const chapters = Array.isArray(candidate?.chapters)
-    ? (candidate.chapters as Record<string, unknown>[])
-    : [];
+  if (raw === undefined) {
+    return badRequest(
+      `Chapter ${String(entry.id)} lists ${file}, but that file is not in the bundle`
+    );
+  }
 
-  const prepared = chapters.map((c, i) => {
-    const file = String(c.file ?? '');
-    const raw = input.files[file];
+  const body = parseChapterFile(raw).body.trim();
 
-    if (raw === undefined) {
-      throw new HttpError(400, `Chapter ${c.id} lists ${file}, but that file is not in the bundle`);
-    }
-
-    const body = parseChapterFile(raw).body.trim();
-
-    return {
-      ...c,
-      body,
+  return {
+    body,
+    entry: {
+      ...entry,
       contentHash: contentHash(body),
-      order: i + 1,
+      order: index + 1,
       wordCount: countWords(body),
-    };
-  });
+    },
+  };
+};
 
+const formatIssues = (error: z.ZodError): string =>
+  error.issues.map(issue => `${issue.path.join('.')}: ${issue.message}`).join('; ');
+
+const parseDocument = (
+  candidate: ChapterCandidate | null,
+  prepared: PreparedChapter[]
+): LibraryDocument => {
   const parsed = DocumentSchema.safeParse({
     ...candidate,
-    chapters: prepared.map(({ body: _b, ...c }) => c),
+    chapters: prepared.map(chapter => chapter.entry),
   });
 
-  if (!parsed.success) {
-    throw new HttpError(
-      400,
-      `Invalid document.json: ${parsed.error.issues.map(i => `${i.path.join('.')}: ${i.message}`).join('; ')}`
-    );
+  if (!parsed.success) return badRequest(`Invalid document.json: ${formatIssues(parsed.error)}`);
+
+  return parsed.data;
+};
+
+const assertStableIds = (doc: LibraryDocument, docId: string): void => {
+  if (doc.id !== docId) badRequest(`document.id must stay "${docId}"`);
+
+  const seen = new Set<string>();
+
+  for (const chapter of doc.chapters) {
+    if (seen.has(chapter.id)) badRequest(`Duplicate chapter id ${chapter.id}`);
+    seen.add(chapter.id);
   }
+};
 
-  const doc = parsed.data;
+const writeChapterFiles = async (
+  doc: LibraryDocument,
+  prepared: PreparedChapter[]
+): Promise<void> => {
+  for (const [index, chapter] of doc.chapters.entries()) {
+    const frontmatter = {
+      document: doc.id,
+      id: chapter.id,
+      order: chapter.order,
+      title: chapter.title,
+    };
 
-  if (doc.id !== docId) throw new HttpError(400, `document.id must stay "${docId}"`);
-  const ids = new Set<string>();
-
-  for (const c of doc.chapters) {
-    if (ids.has(c.id)) throw new HttpError(400, `Duplicate chapter id ${c.id}`);
-    ids.add(c.id);
-  }
-
-  for (const [i, c] of doc.chapters.entries()) {
     await writeFile(
-      resolveInDocument(docId, c.file),
-      buildChapterFile(
-        {
-          document: docId,
-          id: c.id,
-          order: c.order,
-          title: c.title,
-        },
-        prepared[i].body
-      )
+      resolveInDocument(doc.id, chapter.file),
+      buildChapterFile(frontmatter, prepared[index].body)
     );
   }
+};
 
-  const keep = new Set(doc.chapters.map(c => path.basename(c.file)));
+const removeUnlistedChapterFiles = async (doc: LibraryDocument): Promise<void> => {
+  const listed = new Set(doc.chapters.map(chapter => path.basename(chapter.file)));
 
-  for (const f of await readdir(resolveInDocument(docId, 'chapters'))) {
-    if (!keep.has(f)) await rm(resolveInDocument(docId, `chapters/${f}`));
+  for (const fileName of await readdir(resolveInDocument(doc.id, CHAPTERS_DIR))) {
+    if (!listed.has(fileName)) await rm(resolveInDocument(doc.id, `${CHAPTERS_DIR}/${fileName}`));
   }
+};
 
+/**
+ * Applies an edited bundle to a document and re-indexes it.
+ *
+ * @remarks
+ * Validates `document.json`, rewrites chapter frontmatter, recomputes order, content hashes and
+ * word counts (so callers may omit them) and deletes chapter files no longer listed. Chapter ids
+ * must stay stable for existing chapters, or their annotations lose their place.
+ *
+ * @param docId - Document slug; the bundle's `document.id` must match it.
+ * @param input - The edited bundle.
+ * @returns The document as written.
+ * @throws {@link HttpError} 400 when a listed chapter file is missing from the bundle,
+ * `document.json` is invalid, the id changed or chapter ids repeat.
+ */
+export const writeBundle = async (docId: string, input: BundleInput): Promise<LibraryDocument> => {
+  const candidate = input.document as ChapterCandidate | null;
+
+  const prepared = chapterCandidates(candidate).map((entry, index) =>
+    prepareChapter(entry, index, input.files)
+  );
+
+  const doc = parseDocument(candidate, prepared);
+
+  assertStableIds(doc, docId);
+  await writeChapterFiles(doc, prepared);
+  await removeUnlistedChapterFiles(doc);
   await writeDocument(doc);
   await indexDocument(getDb(), docId);
 

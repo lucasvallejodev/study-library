@@ -2,73 +2,77 @@ import { NextResponse } from 'next/server';
 import { mkdir, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 
-import { HttpError, route } from '@/lib/http';
-import { enqueueJob } from '@/lib/jobs';
+import { badRequest, HttpStatus, route } from '@/lib/http';
+import { enqueueJob, type JobRow } from '@/lib/jobs';
+import { isImportableFileName } from '@/lib/patterns';
 import { slugify, tempDir } from '@study/core';
 import { isUrl } from '@study/ingest';
 
-const ALLOWED = /\.(epub|mobi|azw|azw3|prc|html?|md|markdown)$/i;
+type ImportOptions = Record<string, unknown>;
 
-/** POST /api/import — multipart `file` upload, or JSON/form `url`. Optional `id`, `tocDepth`. */
-export const POST = route(async (req: Request) => {
-  const type = req.headers.get('content-type') ?? '';
-  let options: Record<string, unknown> = {};
+type JsonImportRequest = {
+  id?: string;
+  tocDepth?: number;
+  url?: string;
+};
 
-  if (type.includes('multipart/form-data')) {
-    const form = await req.formData();
-    const id = form.get('id');
-    const tocDepth = form.get('tocDepth');
+const UPLOADS_DIR = 'uploads';
 
-    options = {
-      ...(id ? { id: String(id) } : {}),
-      ...(tocDepth ? { tocDepth: Number(tocDepth) } : {}),
-    };
-    const file = form.get('file');
-    const url = form.get('url');
+const formText = (form: FormData, name: string): string | undefined => {
+  const value = form.get(name);
 
-    if (file instanceof File && file.size > 0) {
-      if (!ALLOWED.test(file.name)) {
-        throw new HttpError(400, 'Upload an .epub, .mobi, .azw, .azw3, .html or .md file');
-      }
+  return typeof value === 'string' ? value : undefined;
+};
 
-      const dir = path.join(tempDir(), 'uploads');
+const formOptions = (form: FormData): ImportOptions => {
+  const id = formText(form, 'id');
+  const tocDepth = formText(form, 'tocDepth');
 
-      await mkdir(dir, { recursive: true });
-      const ext = path.extname(file.name).toLowerCase();
+  return {
+    ...(id ? { id } : {}),
+    ...(tocDepth ? { tocDepth: Number(tocDepth) } : {}),
+  };
+};
 
-      const target = path.join(
-        dir,
-        `${Date.now()}-${slugify(path.basename(file.name, ext))}${ext}`
-      );
-
-      await writeFile(target, Buffer.from(await file.arrayBuffer()));
-
-      const job = await enqueueJob({
-        input: target,
-        inputType: 'file',
-        options,
-        originalName: file.name,
-      });
-
-      return NextResponse.json(job, { status: 202 });
-    }
-
-    if (typeof url === 'string' && url) return queueUrl(url, options);
-    throw new HttpError(400, 'Provide a file or a url');
-  }
-
-  const body = (await req.json()) as { id?: string; tocDepth?: number; url?: string };
-
-  if (!body.url) throw new HttpError(400, 'Provide a url');
-
-  return queueUrl(body.url, {
-    ...(body.id ? { id: body.id } : {}),
-    ...(body.tocDepth ? { tocDepth: body.tocDepth } : {}),
-  });
+const jsonOptions = ({ id, tocDepth }: JsonImportRequest): ImportOptions => ({
+  ...(id ? { id } : {}),
+  ...(tocDepth ? { tocDepth } : {}),
 });
 
-async function queueUrl(url: string, options: Record<string, unknown>) {
-  if (!isUrl(url)) throw new HttpError(400, 'URL must start with http:// or https://');
+const accepted = (job: JobRow): Response => NextResponse.json(job, { status: HttpStatus.accepted });
+
+const uploadPath = async (fileName: string): Promise<string> => {
+  const dir = path.join(tempDir(), UPLOADS_DIR);
+
+  await mkdir(dir, { recursive: true });
+
+  const extension = path.extname(fileName).toLowerCase();
+  const baseName = slugify(path.basename(fileName, extension));
+
+  return path.join(dir, `${Date.now()}-${baseName}${extension}`);
+};
+
+const queueFile = async (file: File, options: ImportOptions): Promise<Response> => {
+  if (!isImportableFileName(file.name)) {
+    badRequest('Upload an .epub, .mobi, .azw, .azw3, .html or .md file');
+  }
+
+  const target = await uploadPath(file.name);
+
+  await writeFile(target, Buffer.from(await file.arrayBuffer()));
+
+  const job = await enqueueJob({
+    input: target,
+    inputType: 'file',
+    options,
+    originalName: file.name,
+  });
+
+  return accepted(job);
+};
+
+const queueUrl = async (url: string, options: ImportOptions): Promise<Response> => {
+  if (!isUrl(url)) badRequest('URL must start with http:// or https://');
 
   const job = await enqueueJob({
     input: url,
@@ -76,5 +80,32 @@ async function queueUrl(url: string, options: Record<string, unknown>) {
     options,
   });
 
-  return NextResponse.json(job, { status: 202 });
-}
+  return accepted(job);
+};
+
+const importFromForm = async (req: Request): Promise<Response> => {
+  const form = await req.formData();
+  const options = formOptions(form);
+  const file = form.get('file');
+  const url = formText(form, 'url');
+
+  if (file instanceof File && file.size > 0) return queueFile(file, options);
+  if (url) return queueUrl(url, options);
+
+  return badRequest('Provide a file or a url');
+};
+
+const importFromJson = async (req: Request): Promise<Response> => {
+  const body = (await req.json()) as JsonImportRequest;
+
+  if (!body.url) badRequest('Provide a url');
+
+  return queueUrl(body.url, jsonOptions(body));
+};
+
+const isMultipart = (req: Request): boolean =>
+  (req.headers.get('content-type') ?? '').includes('multipart/form-data');
+
+export const POST = route(async (req: Request) =>
+  isMultipart(req) ? importFromForm(req) : importFromJson(req)
+);

@@ -1,45 +1,36 @@
 import { NextResponse } from 'next/server';
 
 import { chapterWithAnnotations } from '@/lib/chapter-export';
-import { listAnnotations, loadChapter, toAnnotation } from '@/lib/data';
+import {
+  type AnnotationRow,
+  listAnnotations,
+  loadChapter,
+  type LoadedChapter,
+  toAnnotation,
+} from '@/lib/data';
 import { route } from '@/lib/http';
 import { publicOrigin } from '@/lib/origin';
+import { isFlagSet, searchParamsOf } from '@/lib/search-params';
 
 type Ctx = { params: Promise<{ chapter: string; doc: string }> };
 
-/**
- * GET /api/documents/:doc/chapters/:chapter
- *   ?format=md                    raw chapter Markdown
- *   ?format=md&annotations=1      Markdown with highlights inlined (==text== [^id]) for AI tools
- *   default                       JSON with markdown, rendered text, annotations
- */
-export const GET = route(async (req: Request, { params }: Ctx) => {
-  const { chapter, doc } = await params;
-  const url = new URL(req.url);
-  const loaded = await loadChapter(doc, chapter);
-  const withAnnotations = url.searchParams.get('annotations') === '1';
+type ChapterFormat = 'annotated-markdown' | 'json' | 'markdown';
 
-  const annotations =
-    withAnnotations || url.searchParams.get('format') !== 'md'
-      ? (await listAnnotations({ chapterId: chapter, documentId: doc })).reverse()
-      : [];
+const MarkdownHeaders = { 'content-type': 'text/markdown; charset=utf-8' };
 
-  if (url.searchParams.get('format') === 'md') {
-    const body = withAnnotations
-      ? chapterWithAnnotations({
-          annotations,
-          chapterId: chapter,
-          docId: doc,
-          markdown: loaded.markdown,
-          origin: publicOrigin(req),
-          title: loaded.chapter.title,
-        })
-      : loaded.markdown;
+const requestedFormat = (params: URLSearchParams): ChapterFormat => {
+  if (params.get('format') !== 'md') return 'json';
 
-    return new Response(body, { headers: { 'content-type': 'text/markdown; charset=utf-8' } });
-  }
+  return isFlagSet(params, 'annotations') ? 'annotated-markdown' : 'markdown';
+};
 
-  return NextResponse.json({
+const chapterAnnotationsOldestFirst = async (
+  docId: string,
+  chapterId: string
+): Promise<AnnotationRow[]> => (await listAnnotations({ chapterId, documentId: docId })).reverse();
+
+const chapterJson = (loaded: LoadedChapter, annotations: AnnotationRow[]): Response =>
+  NextResponse.json({
     annotations: annotations.map(toAnnotation),
     chapter: loaded.chapter,
     document: { id: loaded.doc.id, title: loaded.doc.title },
@@ -47,4 +38,34 @@ export const GET = route(async (req: Request, { params }: Ctx) => {
     next: loaded.next?.id ?? null,
     prev: loaded.prev?.id ?? null,
   });
+
+const annotatedMarkdown = (
+  origin: string,
+  docId: string,
+  loaded: LoadedChapter,
+  annotations: AnnotationRow[]
+): string =>
+  chapterWithAnnotations({
+    annotations,
+    chapterId: loaded.chapter.id,
+    docId,
+    markdown: loaded.markdown,
+    origin,
+    title: loaded.chapter.title,
+  });
+
+export const GET = route(async (req: Request, { params }: Ctx) => {
+  const { chapter, doc } = await params;
+  const format = requestedFormat(searchParamsOf(req));
+  const loaded = await loadChapter(doc, chapter);
+
+  if (format === 'markdown') return new Response(loaded.markdown, { headers: MarkdownHeaders });
+
+  const annotations = await chapterAnnotationsOldestFirst(doc, chapter);
+
+  if (format === 'json') return chapterJson(loaded, annotations);
+
+  const markdown = annotatedMarkdown(publicOrigin(req), doc, loaded, annotations);
+
+  return new Response(markdown, { headers: MarkdownHeaders });
 });
