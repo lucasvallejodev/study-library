@@ -3,6 +3,17 @@
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 
+import { copyText } from '@/components/annotations';
+import { postJson } from '@/components/http';
+
+type ExportedDocument = {
+  count: number;
+  id: string;
+};
+
+const COPIED_RESET_MS = 1500;
+const FREE_NOTE_ROWS = 3;
+
 export function FreeNoteForm() {
   const router = useRouter();
   const [body, setBody] = useState('');
@@ -10,11 +21,7 @@ export function FreeNoteForm() {
 
   async function save() {
     if (!body.trim()) return;
-    await fetch('/api/annotations', {
-      body: JSON.stringify({ body: body.trim(), type: 'note' }),
-      headers: { 'content-type': 'application/json' },
-      method: 'POST',
-    });
+    await postJson('/api/annotations', { body: body.trim(), type: 'note' });
     setBody('');
     setOpen(false);
     router.refresh();
@@ -36,8 +43,8 @@ export function FreeNoteForm() {
       <textarea
         autoFocus
         value={body}
-        onChange={e => setBody(e.target.value)}
-        rows={3}
+        onChange={event => setBody(event.target.value)}
+        rows={FREE_NOTE_ROWS}
         placeholder="A thought that isn't tied to a passage…"
         className="w-full rounded-lg border border-line bg-panel p-3 text-sm outline-none focus:border-accent"
       />
@@ -53,21 +60,20 @@ export function FreeNoteForm() {
   );
 }
 
+function totalExported(documents: ExportedDocument[]): number {
+  return documents.reduce((total, exported) => total + exported.count, 0);
+}
+
 function ExportAll() {
-  const [msg, setMsg] = useState<string>();
+  const [message, setMessage] = useState<string>();
 
   async function run() {
-    const res = await fetch('/api/export', {
-      body: '{}',
-      headers: { 'content-type': 'application/json' },
-      method: 'POST',
-    });
+    const response = await postJson('/api/export', {});
+    const exported = (await response.json()) as ExportedDocument[];
 
-    const data = (await res.json()) as { count: number; id: string }[];
-
-    setMsg(
-      res.ok
-        ? `Exported ${data.reduce((n, d) => n + d.count, 0)} annotations to each document folder`
+    setMessage(
+      response.ok
+        ? `Exported ${totalExported(exported)} annotations to each document folder`
         : 'Export failed'
     );
   }
@@ -77,7 +83,7 @@ function ExportAll() {
       <button onClick={run} className="text-muted hover:text-ink">
         Back up all annotations
       </button>
-      {msg && <span className="text-muted">{msg}</span>}
+      {message && <span className="text-muted">{message}</span>}
     </>
   );
 }
@@ -86,28 +92,26 @@ export function NotebookItemActions({ href, id }: { href?: string; id: string })
   const router = useRouter();
   const [copied, setCopied] = useState(false);
 
+  async function copyLink(path: string) {
+    await copyText(`${location.origin}${path}`);
+    setCopied(true);
+    setTimeout(() => setCopied(false), COPIED_RESET_MS);
+  }
+
+  async function remove() {
+    if (!confirm('Delete this annotation?')) return;
+    await fetch(`/api/annotations/${id}`, { method: 'DELETE' });
+    router.refresh();
+  }
+
   return (
     <span className="ml-auto flex gap-3 text-muted">
       {href && (
-        <button
-          onClick={async () => {
-            await navigator.clipboard.writeText(`${location.origin}${href}`).catch(() => {});
-            setCopied(true);
-            setTimeout(() => setCopied(false), 1500);
-          }}
-          className="hover:text-ink"
-        >
+        <button onClick={() => copyLink(href)} className="hover:text-ink">
           {copied ? 'Copied' : 'Copy link'}
         </button>
       )}
-      <button
-        onClick={async () => {
-          if (!confirm('Delete this annotation?')) return;
-          await fetch(`/api/annotations/${id}`, { method: 'DELETE' });
-          router.refresh();
-        }}
-        className="hover:text-red-600"
-      >
+      <button onClick={remove} className="hover:text-red-600">
         Delete
       </button>
     </span>

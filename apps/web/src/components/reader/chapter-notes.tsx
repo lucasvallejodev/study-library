@@ -4,38 +4,37 @@ import { useState } from 'react';
 
 import type { Annotation } from '@study/core';
 
+import { studyPrompt } from '../annotations';
 import { AnnotationCard } from './annotation-card';
-import { api } from './api';
+import { AnnotationApi } from './api';
+
+const DRAFT_ROWS = 3;
 
 type Props = {
   chapterId: string;
   documentId: string;
   link: (id: string) => string;
   notes: Annotation[];
-  notify: (m: string) => void;
-  onChange: (a: Annotation) => void;
-  onCreate: (a: Annotation) => void;
+  notify: (message: string) => void;
+  onChange: (annotation: Annotation) => void;
+  onCreate: (annotation: Annotation) => void;
   onDelete: (id: string) => void;
 };
 
-/** Notes about the whole chapter, shown below the text. */
-export function ChapterNotes({
-  chapterId,
-  documentId,
-  link,
-  notes,
-  notify,
-  onChange,
-  onCreate,
-  onDelete,
-}: Props) {
+function isSaveShortcut(event: React.KeyboardEvent): boolean {
+  return event.key === 'Enter' && (event.metaKey || event.ctrlKey);
+}
+
+export function ChapterNotes(props: Props) {
+  const { chapterId, documentId, notes, onCreate } = props;
   const [draft, setDraft] = useState('');
   const [editingId, setEditingId] = useState<string>();
 
   async function add() {
     if (!draft.trim()) return;
+
     onCreate(
-      await api.create({
+      await AnnotationApi.create({
         body: draft.trim(),
         chapterId,
         documentId,
@@ -51,27 +50,21 @@ export function ChapterNotes({
         Chapter notes
       </h2>
       <div className="space-y-3">
-        {notes.map(n => (
-          <AnnotationCard
-            key={n.id}
-            annotation={n}
-            active={false}
-            editing={editingId === n.id}
-            onEdit={v => setEditingId(v ? n.id : undefined)}
-            onFocus={() => {}}
-            onChange={onChange}
-            onDelete={() => onDelete(n.id)}
-            link={link(n.id)}
-            studyPrompt={`/study ${documentId} ${chapterId} --focus ${n.id}`}
-            notify={notify}
+        {notes.map(note => (
+          <ChapterNoteCard
+            key={note.id}
+            {...props}
+            note={note}
+            editing={editingId === note.id}
+            onEdit={editing => setEditingId(editing ? note.id : undefined)}
           />
         ))}
       </div>
       <textarea
         value={draft}
-        onChange={e => setDraft(e.target.value)}
-        onKeyDown={e => e.key === 'Enter' && (e.metaKey || e.ctrlKey) && void add()}
-        rows={3}
+        onChange={event => setDraft(event.target.value)}
+        onKeyDown={event => isSaveShortcut(event) && void add()}
+        rows={DRAFT_ROWS}
         placeholder="Summarise the chapter, note open questions… (Markdown, ⌘↵ to save)"
         className="mt-3 w-full rounded-lg border border-line bg-panel p-3 text-sm outline-none focus:border-accent"
       />
@@ -83,5 +76,29 @@ export function ChapterNotes({
         Add chapter note
       </button>
     </section>
+  );
+}
+
+type ChapterNoteCardProps = Props & {
+  editing: boolean;
+  note: Annotation;
+  onEdit: (editing: boolean) => void;
+};
+
+function ChapterNoteCard(props: ChapterNoteCardProps) {
+  const { chapterId, documentId, editing, link, note, notify, onChange, onDelete, onEdit } = props;
+
+  return (
+    <AnnotationCard
+      annotation={note}
+      active={false}
+      editing={editing}
+      onEdit={onEdit}
+      onChange={onChange}
+      onDelete={() => onDelete(note.id)}
+      link={link(note.id)}
+      studyPrompt={studyPrompt(documentId, chapterId, note.id)}
+      notify={notify}
+    />
   );
 }

@@ -1,54 +1,43 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useStoredPreference } from '@/components/use-stored-preference';
 
 type Theme = 'light' | 'dark' | 'system';
 
-const NEXT: Record<Theme, Theme> = {
+const NextTheme: Record<Theme, Theme> = {
   dark: 'system',
   light: 'dark',
   system: 'light',
 };
 
-const LABEL: Record<Theme, string> = {
+const ThemeLabels: Record<Theme, string> = {
   dark: '☾ Dark',
   light: '☀ Light',
   system: '◐ Auto',
 };
 
-export function ThemeToggle() {
-  const [theme, setTheme] = useState<Theme>('system');
+function resolveTheme(theme: Theme): 'light' | 'dark' {
+  if (theme !== 'system') return theme;
 
-  useEffect(() => {
-    try {
-      setTheme((localStorage.getItem('theme') as Theme) || 'system');
-    } catch {}
-  }, []);
+  return matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+}
+
+export function ThemeToggle() {
+  const [stored, saveTheme] = useStoredPreference('theme');
+  const theme = (stored as Theme | null) || 'system';
 
   function apply(next: Theme) {
-    setTheme(next);
-
-    try {
-      localStorage.setItem('theme', next);
-    } catch {}
-
-    const resolved =
-      next === 'system'
-        ? matchMedia('(prefers-color-scheme: dark)').matches
-          ? 'dark'
-          : 'light'
-        : next;
-
-    document.documentElement.dataset.theme = resolved;
+    saveTheme(next);
+    document.documentElement.dataset.theme = resolveTheme(next);
   }
 
   return (
     <button
-      onClick={() => apply(NEXT[theme])}
+      onClick={() => apply(NextTheme[theme])}
       className="rounded px-2 py-1 text-xs text-muted hover:bg-panel hover:text-ink"
       title="Theme"
     >
-      {LABEL[theme]}
+      {ThemeLabels[theme]}
     </button>
   );
 }

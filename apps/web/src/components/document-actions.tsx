@@ -2,17 +2,24 @@
 
 import { useState } from 'react';
 
+import { errorMessageOf } from '@/components/http';
+
+const REIMPORT_CONFIRMATION =
+  'Re-import from the saved source? Chapter ids are kept when titles match.';
+
+const LINK_CLASS = 'block text-accent hover:underline';
+
 export function DocumentActions({ docId }: { docId: string }) {
   const [message, setMessage] = useState<string>();
 
   async function reimport() {
-    if (!confirm('Re-import from the saved source? Chapter ids are kept when titles match.')) {
-      return;
-    }
+    if (!confirm(REIMPORT_CONFIRMATION)) return;
 
-    const res = await fetch(`/api/documents/${docId}/reimport`, { method: 'POST' });
+    const response = await fetch(`/api/documents/${docId}/reimport`, { method: 'POST' });
 
-    setMessage(res.ok ? 'Re-import queued — see the Import page.' : (await res.json()).error);
+    setMessage(
+      response.ok ? 'Re-import queued — see the Import page.' : await errorMessageOf(response)
+    );
   }
 
   async function copyStudy() {
@@ -22,13 +29,13 @@ export function DocumentActions({ docId }: { docId: string }) {
 
   return (
     <div className="mt-6 space-y-1 text-sm">
-      <button onClick={copyStudy} className="block text-accent hover:underline">
+      <button onClick={copyStudy} className={LINK_CLASS}>
         Copy /study prompt
       </button>
-      <a href={`/notebook?doc=${docId}`} className="block text-accent hover:underline">
+      <a href={`/notebook?doc=${docId}`} className={LINK_CLASS}>
         Notes for this document
       </a>
-      <a href={`/api/export?doc=${docId}&format=md`} className="block text-accent hover:underline">
+      <a href={`/api/export?doc=${docId}&format=md`} className={LINK_CLASS}>
         Export annotations (Markdown)
       </a>
       <button onClick={reimport} className="block text-muted hover:text-ink">

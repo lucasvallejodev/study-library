@@ -1,6 +1,6 @@
 import type { Annotation } from '@study/core';
 
-export const HIGHLIGHT_NAMES = [
+export const HighlightNames = [
   'hl-yellow',
   'hl-green',
   'hl-blue',
@@ -10,68 +10,102 @@ export const HIGHLIGHT_NAMES = [
   'hl-active',
 ] as const;
 
+type HighlightName = (typeof HighlightNames)[number];
+
+export type AnchoredAnnotation = {
+  annotation: Annotation;
+  range: Range;
+};
+
 export function supportsHighlights(): boolean {
   return typeof CSS !== 'undefined' && 'highlights' in CSS && typeof Highlight !== 'undefined';
 }
 
-function nameFor(a: Annotation): (typeof HIGHLIGHT_NAMES)[number] {
-  if (a.type === 'ai_question') return 'hl-question';
+function colorHighlightOf(annotation: Annotation): HighlightName {
+  if (annotation.type === 'ai_question') return 'hl-question';
 
-  return `hl-${a.color ?? 'yellow'}` as (typeof HIGHLIGHT_NAMES)[number];
+  return `hl-${annotation.color ?? 'yellow'}` as HighlightName;
 }
 
-/** Paint anchored annotations without touching the DOM (CSS Custom Highlight API). */
-export function paintHighlights(anchored: { a: Annotation; range: Range }[], activeId?: string) {
-  if (!supportsHighlights()) return paintWithMarks(anchored);
-  const groups = new Map<string, Range[]>(HIGHLIGHT_NAMES.map(n => [n, []]));
+function isUnderlineOnlyNote(annotation: Annotation): boolean {
+  return annotation.type === 'note' && !annotation.color;
+}
 
-  for (const { a, range } of anchored) {
-    // Uncolored notes (e.g. Claude's notes on your highlight) only underline the passage.
-    if (!(a.type === 'note' && !a.color)) groups.get(nameFor(a))!.push(range);
-    if (a.body) groups.get('hl-note')!.push(range);
-    if (a.id === activeId) groups.get('hl-active')!.push(range);
+function highlightsOf(annotation: Annotation, activeId?: string): HighlightName[] {
+  const names: HighlightName[] = [];
+
+  if (!isUnderlineOnlyNote(annotation)) names.push(colorHighlightOf(annotation));
+  if (annotation.body) names.push('hl-note');
+  if (annotation.id === activeId) names.push('hl-active');
+
+  return names;
+}
+
+export function paintHighlights(anchored: AnchoredAnnotation[], activeId?: string) {
+  if (!supportsHighlights()) return paintWithMarks(anchored);
+  const groups = new Map<HighlightName, Range[]>(HighlightNames.map(name => [name, []]));
+
+  for (const { annotation, range } of anchored) {
+    for (const name of highlightsOf(annotation, activeId)) groups.get(name)?.push(range);
   }
 
   for (const [name, ranges] of groups) CSS.highlights.set(name, new Highlight(...ranges));
 }
 
 export function clearHighlights() {
-  if (supportsHighlights()) for (const n of HIGHLIGHT_NAMES) CSS.highlights.delete(n);
+  if (supportsHighlights()) for (const name of HighlightNames) CSS.highlights.delete(name);
 }
 
-/** Fallback for browsers without the Highlight API: wrap text nodes in <mark>. */
-function paintWithMarks(anchored: { a: Annotation; range: Range }[]) {
-  const root = anchored[0]?.range.commonAncestorContainer.ownerDocument;
-
+function unwrapMarks(root: Document | undefined) {
   root
     ?.querySelectorAll('mark[data-annotation]')
-    .forEach(m => m.replaceWith(...Array.from(m.childNodes)));
+    .forEach(mark => mark.replaceWith(...Array.from(mark.childNodes)));
+}
 
-  for (const { a, range } of anchored) {
-    const nodes: Text[] = [];
-    const walker = document.createTreeWalker(range.commonAncestorContainer, NodeFilter.SHOW_TEXT);
-    let n: Node | null = walker.currentNode;
+function textNodesIn(range: Range): Text[] {
+  const nodes: Text[] = [];
+  const walker = document.createTreeWalker(range.commonAncestorContainer, NodeFilter.SHOW_TEXT);
+  let node: Node | null = walker.currentNode;
 
-    while (n) {
-      if (n.nodeType === Node.TEXT_NODE && range.intersectsNode(n)) nodes.push(n as Text);
-      n = walker.nextNode();
-    }
+  while (node) {
+    if (node.nodeType === Node.TEXT_NODE && range.intersectsNode(node)) nodes.push(node as Text);
+    node = walker.nextNode();
+  }
 
-    for (let text of nodes) {
-      if (text === range.startContainer && range.startOffset > 0) {
-        text = text.splitText(range.startOffset);
-      }
+  return nodes;
+}
 
-      if (text === range.endContainer || (nodes.at(-1) === text && range.endContainer === text)) {
-        text.splitText(range.endOffset);
-      }
+function isRangeEnd(text: Text, range: Range, nodes: Text[]): boolean {
+  return text === range.endContainer || (nodes.at(-1) === text && range.endContainer === text);
+}
 
-      const mark = document.createElement('mark');
+function clipToRange(original: Text, range: Range, nodes: Text[]): Text {
+  let text = original;
 
-      mark.dataset.annotation = a.id;
-      mark.dataset.color = a.color ?? 'yellow';
-      text.replaceWith(mark);
-      mark.appendChild(text);
-    }
+  if (text === range.startContainer && range.startOffset > 0) {
+    text = text.splitText(range.startOffset);
+  }
+
+  if (isRangeEnd(text, range, nodes)) text.splitText(range.endOffset);
+
+  return text;
+}
+
+function wrapInMark(text: Text, annotation: Annotation) {
+  const mark = document.createElement('mark');
+
+  mark.dataset.annotation = annotation.id;
+  mark.dataset.color = annotation.color ?? 'yellow';
+  text.replaceWith(mark);
+  mark.appendChild(text);
+}
+
+function paintWithMarks(anchored: AnchoredAnnotation[]) {
+  unwrapMarks(anchored[0]?.range.commonAncestorContainer.ownerDocument ?? undefined);
+
+  for (const { annotation, range } of anchored) {
+    const nodes = textNodesIn(range);
+
+    for (const text of nodes) wrapInMark(clipToRange(text, range, nodes), annotation);
   }
 }

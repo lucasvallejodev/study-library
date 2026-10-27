@@ -1,9 +1,11 @@
-import { and, eq } from 'drizzle-orm';
 import type { Metadata } from 'next';
 
 import { Reader } from '@/components/reader/reader';
+import type { ChapterLink } from '@/components/reader/reader-types';
+import type { TocItem } from '@/components/reader/toc-drawer';
 import { listAnnotations, loadChapter, toAnnotation } from '@/lib/data';
-import { getDb, t } from '@/lib/db';
+import { savedChapterPosition } from '@/lib/progress';
+import type { Annotation, ChapterEntry, LibraryDocument } from '@study/core';
 
 export const dynamic = 'force-dynamic';
 
@@ -24,17 +26,8 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 export default async function ChapterPage({ params }: Props) {
   const { chapter: chapterId, doc: docId } = await params;
   const { chapter, doc, next, prev, rendered } = await loadChapter(docId, chapterId);
-
-  const annotations = (await listAnnotations({ chapterId, documentId: docId }))
-    .reverse()
-    .map(toAnnotation);
-
-  const [progress] = await getDb()
-    .select()
-    .from(t.readingProgress)
-    .where(
-      and(eq(t.readingProgress.documentId, docId), eq(t.readingProgress.chapterId, chapterId))
-    );
+  const annotations = await loadChapterAnnotations(docId, chapterId);
+  const savedPosition = await savedChapterPosition(docId, chapterId);
 
   return (
     <Reader
@@ -50,17 +43,33 @@ export default async function ChapterPage({ params }: Props) {
         title: chapter.title,
         wordCount: chapter.wordCount,
       }}
-      toc={doc.chapters.map(c => ({
-        depth: c.depth,
-        id: c.id,
-        matter: c.matter,
-        title: c.title,
-      }))}
+      toc={tocItemsOf(doc)}
       html={rendered.html}
-      prev={prev ? { id: prev.id, title: prev.title } : null}
-      next={next ? { id: next.id, title: next.title } : null}
+      prev={chapterLinkOf(prev)}
+      next={chapterLinkOf(next)}
       initialAnnotations={annotations}
-      initialPosition={progress?.position ?? 0}
+      initialPosition={savedPosition}
     />
   );
+}
+
+async function loadChapterAnnotations(docId: string, chapterId: string): Promise<Annotation[]> {
+  const rows = await listAnnotations({ chapterId, documentId: docId });
+
+  rows.reverse();
+
+  return rows.map(toAnnotation);
+}
+
+function tocItemsOf(doc: LibraryDocument): TocItem[] {
+  return doc.chapters.map(chapter => ({
+    depth: chapter.depth,
+    id: chapter.id,
+    matter: chapter.matter,
+    title: chapter.title,
+  }));
+}
+
+function chapterLinkOf(chapter: ChapterEntry | null | undefined): ChapterLink | null {
+  return chapter ? { id: chapter.id, title: chapter.title } : null;
 }

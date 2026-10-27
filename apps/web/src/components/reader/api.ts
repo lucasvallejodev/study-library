@@ -1,22 +1,28 @@
 import type { Annotation, NewAnnotation } from '@study/core';
 
-async function call<T>(path: string, method: string, body?: unknown): Promise<T> {
-  const res = await fetch(path, {
+type ErrorBody = { error?: string };
+
+async function readJsonOrEmpty(response: Response): Promise<unknown> {
+  return response.json().catch(() => ({}));
+}
+
+async function call<Result>(path: string, method: string, body?: unknown): Promise<Result> {
+  const response = await fetch(path, {
     body: body ? JSON.stringify(body) : undefined,
     headers: body ? { 'content-type': 'application/json' } : undefined,
     method,
   });
 
-  const data = await res.json().catch(() => ({}));
+  const data = await readJsonOrEmpty(response);
 
-  if (!res.ok) {
-    throw new Error((data as { error?: string }).error ?? `Request failed (${res.status})`);
+  if (!response.ok) {
+    throw new Error((data as ErrorBody).error ?? `Request failed (${response.status})`);
   }
 
-  return data as T;
+  return data as Result;
 }
 
-export const api = {
+export const AnnotationApi = {
   create: (input: Partial<NewAnnotation>) => call<Annotation>('/api/annotations', 'POST', input),
   remove: (id: string) => call<{ deleted: string }>(`/api/annotations/${id}`, 'DELETE'),
   update: (id: string, patch: Partial<Annotation>) =>
