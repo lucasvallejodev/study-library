@@ -23,11 +23,13 @@ Default per chapter (adapt to what was asked):
 **Summary.** 3–6 sentences in plain language.
 
 **Key ideas**
+
 - …(cite short quotes; link to the user's highlights by their deep link when relevant)
 
 **Terms** — term: definition (only if the chapter introduces vocabulary)
 
 **Questions to check yourself**
+
 1. …
 ```
 

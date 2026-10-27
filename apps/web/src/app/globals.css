@@ -1,11 +1,13 @@
-@import "tailwindcss";
+@import 'tailwindcss';
 @plugin "@tailwindcss/typography";
 
 @custom-variant dark (&:where([data-theme="dark"], [data-theme="dark"] *));
 
 @theme {
-  --font-serif: "Source Serif 4", Charter, "Bitstream Charter", "Sitka Text", Cambria, Georgia, serif;
-  --font-sans: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", sans-serif;
+  --font-serif:
+    'Source Serif 4', Charter, 'Bitstream Charter', 'Sitka Text', Cambria, Georgia, serif;
+  --font-sans:
+    ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
   --color-paper: #fdfcf9;
   --color-ink: #1d1c1a;
   --color-muted: #6b6760;
@@ -14,7 +16,7 @@
   --color-accent: #1a7f64;
 }
 
-:root[data-theme="dark"] {
+:root[data-theme='dark'] {
   --color-paper: #161514;
   --color-ink: #e8e4dc;
   --color-muted: #9c968b;
@@ -59,7 +61,7 @@ body {
   max-height: 80vh;
   width: auto;
 }
-:root[data-theme="dark"] .reader-prose img {
+:root[data-theme='dark'] .reader-prose img {
   /* Black-on-transparent line art (common in old books) stays visible in dark mode. */
   background: #f3efe6;
   border-radius: 4px;
@@ -92,35 +94,81 @@ body {
   color: var(--shiki-light);
   background-color: var(--shiki-light-bg);
 }
-:root[data-theme="dark"] .shiki,
-:root[data-theme="dark"] .shiki span {
+:root[data-theme='dark'] .shiki,
+:root[data-theme='dark'] .shiki span {
   color: var(--shiki-dark);
   background-color: var(--shiki-dark-bg);
 }
 
 /* Highlights painted with the CSS Custom Highlight API */
-::highlight(hl-yellow) { background-color: rgb(255 214 64 / 0.45); }
-::highlight(hl-green) { background-color: rgb(110 210 140 / 0.4); }
-::highlight(hl-blue) { background-color: rgb(110 170 255 / 0.38); }
-::highlight(hl-pink) { background-color: rgb(255 130 180 / 0.38); }
-::highlight(hl-question) { background-color: rgb(170 140 255 / 0.25); text-decoration: underline dotted rgb(140 100 255); }
-::highlight(hl-note) { text-decoration: underline solid rgb(26 127 100 / 0.7); text-decoration-thickness: 2px; text-underline-offset: 3px; }
-::highlight(hl-active) { background-color: rgb(255 170 0 / 0.65); }
-:root[data-theme="dark"] {
-  ::highlight(hl-yellow) { background-color: rgb(255 214 64 / 0.3); }
-  ::highlight(hl-green) { background-color: rgb(110 210 140 / 0.28); }
-  ::highlight(hl-blue) { background-color: rgb(110 170 255 / 0.3); }
-  ::highlight(hl-pink) { background-color: rgb(255 130 180 / 0.28); }
+::highlight(hl-yellow) {
+  background-color: rgb(255 214 64 / 0.45);
+}
+::highlight(hl-green) {
+  background-color: rgb(110 210 140 / 0.4);
+}
+::highlight(hl-blue) {
+  background-color: rgb(110 170 255 / 0.38);
+}
+::highlight(hl-pink) {
+  background-color: rgb(255 130 180 / 0.38);
+}
+::highlight(hl-question) {
+  background-color: rgb(170 140 255 / 0.25);
+  text-decoration: underline dotted rgb(140 100 255);
+}
+::highlight(hl-note) {
+  text-decoration: underline solid rgb(26 127 100 / 0.7);
+  text-decoration-thickness: 2px;
+  text-underline-offset: 3px;
+}
+::highlight(hl-active) {
+  background-color: rgb(255 170 0 / 0.65);
+}
+:root[data-theme='dark'] {
+  ::highlight(hl-yellow) {
+    background-color: rgb(255 214 64 / 0.3);
+  }
+  ::highlight(hl-green) {
+    background-color: rgb(110 210 140 / 0.28);
+  }
+  ::highlight(hl-blue) {
+    background-color: rgb(110 170 255 / 0.3);
+  }
+  ::highlight(hl-pink) {
+    background-color: rgb(255 130 180 / 0.28);
+  }
 }
 /* Fallback when the Highlight API is missing */
-mark[data-annotation] { background: rgb(255 214 64 / 0.45); color: inherit; }
-mark[data-annotation][data-color="green"] { background: rgb(110 210 140 / 0.4); }
-mark[data-annotation][data-color="blue"] { background: rgb(110 170 255 / 0.38); }
-mark[data-annotation][data-color="pink"] { background: rgb(255 130 180 / 0.38); }
+mark[data-annotation] {
+  background: rgb(255 214 64 / 0.45);
+  color: inherit;
+}
+mark[data-annotation][data-color='green'] {
+  background: rgb(110 210 140 / 0.4);
+}
+mark[data-annotation][data-color='blue'] {
+  background: rgb(110 170 255 / 0.38);
+}
+mark[data-annotation][data-color='pink'] {
+  background: rgb(255 130 180 / 0.38);
+}
 
-.swatch-yellow { background: rgb(255 214 64); }
-.swatch-green { background: rgb(110 210 140); }
-.swatch-blue { background: rgb(110 170 255); }
-.swatch-pink { background: rgb(255 130 180); }
-.swatch-question { background: rgb(170 140 255); }
-.swatch-claude { background: var(--color-accent); }
+.swatch-yellow {
+  background: rgb(255 214 64);
+}
+.swatch-green {
+  background: rgb(110 210 140);
+}
+.swatch-blue {
+  background: rgb(110 170 255);
+}
+.swatch-pink {
+  background: rgb(255 130 180);
+}
+.swatch-question {
+  background: rgb(170 140 255);
+}
+.swatch-claude {
+  background: var(--color-accent);
+}

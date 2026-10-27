@@ -22,18 +22,25 @@ library/                         (LIBRARY_DIR; default <repo>/library)
   "id": "alices-adventures-in-wonderland",
   "title": "Alice’s Adventures in Wonderland",
   "authors": ["Lewis Carroll"],
-  "kind": "book",                         // book | article | docs
+  "kind": "book", // book | article | docs
   "language": "en-GB",
   "description": "…",
-  "source": { "type": "epub", "file": "source/original.epub", "importedAt": "2026-10-27T13:44:00.000Z" },
+  "source": {
+    "type": "epub",
+    "file": "source/original.epub",
+    "importedAt": "2026-10-27T13:44:00.000Z"
+  },
   "cover": "assets/b3e9747ee2b17878.jpg",
   "chapters": [
     {
-      "id": "ch-006", "order": 6, "title": "I: Down the Rabbit-Hole",
+      "id": "ch-006",
+      "order": 6,
+      "title": "I: Down the Rabbit-Hole",
       "file": "chapters/006-i-down-the-rabbit-hole.md",
-      "contentHash": "sha256:…", "wordCount": 2146,
-      "matter": "body",                   // front | body | back
-      "depth": 2                          // TOC level, for indentation
+      "contentHash": "sha256:…",
+      "wordCount": 2146,
+      "matter": "body", // front | body | back
+      "depth": 2 // TOC level, for indentation
     }
   ]
 }
@@ -46,7 +53,7 @@ library/                         (LIBRARY_DIR; default <repo>/library)
 ```markdown
 ---
 id: ch-006
-title: "I: Down the Rabbit-Hole"
+title: 'I: Down the Rabbit-Hole'
 order: 6
 document: alices-adventures-in-wonderland
 ---

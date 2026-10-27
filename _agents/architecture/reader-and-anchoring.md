@@ -13,11 +13,12 @@ Selection → `offsetsFromRange` → trim whitespace → `describeRange(text, st
 ## Resolving (every load)
 
 `resolveSelectors(text, selectors)`:
+
 1. Position slice equals `exact` → `exact`.
 2. All exact occurrences of the quote, ranked by prefix/suffix similarity and distance to the old position → `moved`.
 3. `approx-string-match` with up to 25 % errors → `fuzzy`.
 4. Nothing → `null` ⇒ the client PATCHes `orphaned: true`; orphans are listed under "Orphaned" in the margin, never deleted.
-When a match is `moved`/`fuzzy` (or an orphan comes back), the client PATCHes fresh selectors so the next load is exact.
+   When a match is `moved`/`fuzzy` (or an orphan comes back), the client PATCHes fresh selectors so the next load is exact.
 
 ## Painting
 

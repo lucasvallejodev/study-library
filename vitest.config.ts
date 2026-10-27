@@ -1,8 +1,8 @@
-import { defineConfig } from "vitest/config";
+import { defineConfig } from 'vitest/config';
 
 export default defineConfig({
   test: {
-    include: ["packages/*/test/**/*.test.ts", "scripts/**/*.test.mjs"],
+    include: ['packages/*/test/**/*.test.ts', 'scripts/**/*.test.mjs'],
     testTimeout: 120_000,
   },
 });

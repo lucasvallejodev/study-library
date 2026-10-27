@@ -8,7 +8,9 @@
     "./db": "./src/db/index.ts",
     "./schema": "./src/db/schema.ts"
   },
-  "scripts": { "typecheck": "tsc -p ." },
+  "scripts": {
+    "typecheck": "tsc -p ."
+  },
   "dependencies": {
     "drizzle-orm": "^0.44.5",
     "postgres": "^3.4.7",

@@ -36,14 +36,14 @@ Three services: `app` (Next.js + Calibre + Pandoc), `db` (Postgres 18), `backup`
 
 ## Using it
 
-| Where | What |
-| --- | --- |
-| `/` | Library with covers, progress and "continue reading" |
-| `/read/<doc>` | Table of contents, notes per chapter, re-import, export |
+| Where                   | What                                                                                          |
+| ----------------------- | --------------------------------------------------------------------------------------------- |
+| `/`                     | Library with covers, progress and "continue reading"                                          |
+| `/read/<doc>`           | Table of contents, notes per chapter, re-import, export                                       |
 | `/read/<doc>/<chapter>` | Reader: select text → highlight (4 colors), note, copy link, Ask Claude. ← / → change chapter |
-| `/notebook` | All highlights and notes; filter by document, type, color, tag; free-floating notes; backup |
-| `/search` | Full-text search over every chapter and every note |
-| `/import` | Upload or paste a URL; live job log and import report |
+| `/notebook`             | All highlights and notes; filter by document, type, color, tag; free-floating notes; backup   |
+| `/search`               | Full-text search over every chapter and every note                                            |
+| `/import`               | Upload or paste a URL; live job log and import report                                         |
 
 ## Studying with Claude Code
 

@@ -23,6 +23,7 @@ Skip highlights that already have a `claude` note on the same passage unless the
 ## Write each note
 
 Read the paragraph around the highlight (and the user's own note on it, if any — answer their question or build on their thought). 2–5 sentences, Markdown allowed. Pick what helps most:
+
 - **Explain**: what the passage means, in plain words; unpack irony, archaic language, technical terms.
 - **Context**: historical, biographical or cultural background the passage relies on.
 - **Connect**: how it relates to earlier/later parts of the book (cite the chapter) or to the book's themes.

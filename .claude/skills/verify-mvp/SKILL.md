@@ -31,6 +31,7 @@ pnpm -s lib export verify-alice
 ## 3. Reader in the browser (preview tools or a browser)
 
 Open `http://localhost:3000/read/verify-alice/<ch>` at ≥1280px wide:
+
 - Text renders in the serif column, images visible, TOC drawer opens, prev/next links work, progress % moves on scroll.
 - Select a sentence → popover → yellow: highlight painted and a card appears in the margin; "Note" opens the editor; save persists after reload.
 - The CLI-created `ai_question` is painted (purple) and listed in the margin.
@@ -45,6 +46,7 @@ pnpm -s lib pull verify-alice
 # insert a new paragraph near the top of the chapter file in _temp/edit/verify-alice/chapters/
 pnpm -s lib push verify-alice
 ```
+
 Reload the chapter: the highlights are still painted on the same words. Delete the highlighted sentence and push again: the card moves to "Orphaned" instead of disappearing.
 
 ## 5. Docker (before deploys)
@@ -52,6 +54,7 @@ Reload the chapter: the highlights are still painted on the same words. Delete t
 ```bash
 docker compose build app
 ```
+
 Optionally run it against a scratch DB and import a MOBI (convert an EPUB with `ebook-convert` inside the container) to confirm Calibre works.
 
 ## 6. Clean up

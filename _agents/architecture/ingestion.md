@@ -2,14 +2,14 @@
 
 Entry: `importSource(input, { id?, tocDepth?, db?, log?, fetcher?, sourceUrl? })` in `packages/ingest/src/index.ts`.
 
-| Input | Importer | Notes |
-| --- | --- | --- |
-| `.epub` | `epub.ts` | Own parser (JSZip + fast-xml-parser + jsdom) |
-| `.mobi .azw .azw3 .prc` | `calibre.ts` → EPUB path | DRM check reads the MOBI header (record 0, bytes 12–13) before calling `ebook-convert` |
-| `http(s)://…` | `url.ts` | fetch → Defuddle (Markdown) → images downloaded → split at `##` over 8,000 words; Playwright retry when < 80 words (optional dependency) |
-| `.html` | `url.ts` | Saved page; uses `<link rel=canonical>` or `--source-url` as base URL |
-| `.md` | `markdown.ts` | YAML frontmatter (`title`, `authors`, `kind`, `description`, `source_url`); chapters at `# ` headings; local images copied |
-| `.pdf` | — | Not yet: use the `pdf-to-library` skill (Claude converts to `.md`, then imports) |
+| Input                   | Importer                 | Notes                                                                                                                                    |
+| ----------------------- | ------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------- |
+| `.epub`                 | `epub.ts`                | Own parser (JSZip + fast-xml-parser + jsdom)                                                                                             |
+| `.mobi .azw .azw3 .prc` | `calibre.ts` → EPUB path | DRM check reads the MOBI header (record 0, bytes 12–13) before calling `ebook-convert`                                                   |
+| `http(s)://…`           | `url.ts`                 | fetch → Defuddle (Markdown) → images downloaded → split at `##` over 8,000 words; Playwright retry when < 80 words (optional dependency) |
+| `.html`                 | `url.ts`                 | Saved page; uses `<link rel=canonical>` or `--source-url` as base URL                                                                    |
+| `.md`                   | `markdown.ts`            | YAML frontmatter (`title`, `authors`, `kind`, `description`, `source_url`); chapters at `# ` headings; local images copied               |
+| `.pdf`                  | —                        | Not yet: use the `pdf-to-library` skill (Claude converts to `.md`, then imports)                                                         |
 
 ## EPUB algorithm (`sliceChapters` + `convertEpub`)
 

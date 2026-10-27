@@ -18,11 +18,11 @@ Native PDF import is planned for v0.3. Until then you do the conversion: read th
 
 ```markdown
 ---
-title: "Exact Title"
-authors: ["First Author", "Second Author"]
-kind: book            # book | article
-description: "One sentence."
-source_url: "https://… (only if known)"
+title: 'Exact Title'
+authors: ['First Author', 'Second Author']
+kind: book # book | article
+description: 'One sentence.'
+source_url: 'https://… (only if known)'
 ---
 
 # Chapter One Title
@@ -35,6 +35,7 @@ Body text…
 ```
 
 Fidelity rules:
+
 - Transcribe the text faithfully; fix only extraction artifacts: hyphenation across lines, running headers/footers, page numbers, broken paragraphs, ligatures.
 - Keep footnotes as Markdown footnotes (`[^1]` … `[^1]: text`) within the chapter that uses them.
 - Tables as GFM tables; formulas as `$…$` / `$$…$$`; code in fenced blocks.

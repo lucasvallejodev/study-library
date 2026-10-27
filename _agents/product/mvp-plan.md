@@ -36,20 +36,20 @@ Everything runs on a home server with Docker Compose. The web app's API routes a
 
 TypeScript end to end, shelling out to two mature CLIs (Calibre and Pandoc) for the hard format work.
 
-| Layer | Choice | Why |
-| --- | --- | --- |
-| Monorepo | pnpm workspaces, Node 22+, TypeScript | One install, shared types between CLI, web and MCP server |
-| Web app | Next.js (App Router) + React | Well known to coding agents; server routes for the API, client components for the reader |
-| Reading style | Tailwind CSS + `@tailwindcss/typography` (`prose`) | Medium-like column: ~680px width, serif body, generous line height |
-| Markdown rendering | unified: remark-parse, remark-gfm, remark-math, rehype-katex, rehype-slug, Shiki for code | Tables, footnotes, math and code blocks from technical books |
-| Database | PostgreSQL + Drizzle ORM; full-text search (tsvector + GIN) and pg_trgm | Durable, runs in Docker, search built in, nightly pg_dump |
-| MOBI/AZW3 to EPUB | Calibre `ebook-convert` CLI | Reads MOBI, AZW, AZW3 and more; scriptable |
-| HTML to Markdown | Pandoc CLI (`-f html -t gfm`) per chapter | Best fidelity for tables, footnotes and nested lists |
-| EPUB parsing | Own parser: JSZip + fast-xml-parser for OPF, nav.xhtml and toc.ncx | Chapter splitting must follow the book's TOC |
-| Web articles | Defuddle (`defuddle/node`, Markdown output) + jsdom | Readability successor; keeps footnotes, math and code |
-| JS-heavy pages | Playwright (optional fallback) | Renders pages that ship empty HTML |
-| Highlight anchoring | W3C Web Annotation selectors (TextQuote + TextPosition) | Standard, survives re-imports (Hypothesis approach) |
-| AI integration | CLI + Claude Code skills (MVP), MCP server + plugin (v0.2) | Skills are cheap; MCP adds structured read/write later |
+| Layer               | Choice                                                                                    | Why                                                                                      |
+| ------------------- | ----------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------- |
+| Monorepo            | pnpm workspaces, Node 22+, TypeScript                                                     | One install, shared types between CLI, web and MCP server                                |
+| Web app             | Next.js (App Router) + React                                                              | Well known to coding agents; server routes for the API, client components for the reader |
+| Reading style       | Tailwind CSS + `@tailwindcss/typography` (`prose`)                                        | Medium-like column: ~680px width, serif body, generous line height                       |
+| Markdown rendering  | unified: remark-parse, remark-gfm, remark-math, rehype-katex, rehype-slug, Shiki for code | Tables, footnotes, math and code blocks from technical books                             |
+| Database            | PostgreSQL + Drizzle ORM; full-text search (tsvector + GIN) and pg_trgm                   | Durable, runs in Docker, search built in, nightly pg_dump                                |
+| MOBI/AZW3 to EPUB   | Calibre `ebook-convert` CLI                                                               | Reads MOBI, AZW, AZW3 and more; scriptable                                               |
+| HTML to Markdown    | Pandoc CLI (`-f html -t gfm`) per chapter                                                 | Best fidelity for tables, footnotes and nested lists                                     |
+| EPUB parsing        | Own parser: JSZip + fast-xml-parser for OPF, nav.xhtml and toc.ncx                        | Chapter splitting must follow the book's TOC                                             |
+| Web articles        | Defuddle (`defuddle/node`, Markdown output) + jsdom                                       | Readability successor; keeps footnotes, math and code                                    |
+| JS-heavy pages      | Playwright (optional fallback)                                                            | Renders pages that ship empty HTML                                                       |
+| Highlight anchoring | W3C Web Annotation selectors (TextQuote + TextPosition)                                   | Standard, survives re-imports (Hypothesis approach)                                      |
+| AI integration      | CLI + Claude Code skills (MVP), MCP server + plugin (v0.2)                                | Skills are cheap; MCP adds structured read/write later                                   |
 
 ## Deployment on the home server
 
@@ -101,24 +101,24 @@ Notes: on a highlight, on a whole chapter, or free-floating in the notebook; Mar
 
 ## Roadmap
 
-| Release | Includes |
-| --- | --- |
+| Release  | Includes                                                                                                                                                                                                                                                                                                           |
+| -------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | v0.1 MVP | EPUB + MOBI import (CLI and upload page) · single URL import · library, document and reader pages · highlights in 4 colors, notes, chapter notes · deep links · notebook · FTS search · Markdown/JSON export · Docker Compose deploy with nightly backups · `lib` CLI · `import-source` and `study-chapter` skills |
-| v0.2 | Documentation-site crawling · MCP server + plugin · `review` skill · AI questions in the reader margin · tags |
-| v0.3 | PDF import (Docling or Marker) · spaced repetition · reading stats · PWA · Obsidian export |
+| v0.2     | Documentation-site crawling · MCP server + plugin · `review` skill · AI questions in the reader margin · tags                                                                                                                                                                                                      |
+| v0.3     | PDF import (Docling or Marker) · spaced repetition · reading stats · PWA · Obsidian export                                                                                                                                                                                                                         |
 
 ## Milestones (build plan)
 
-| # | Milestone | Depends on | Done when |
-| --- | --- | --- | --- |
-| M0 | Scaffold + contract | – | Monorepo builds; Zod schemas; Drizzle schema + migration; compose Postgres; fixture validates; CLAUDE.md |
-| M1 | EPUB + MOBI ingest | M0 | Public-domain EPUBs import with chapter count matching the TOC, images resolve, report written; MOBI converts via Calibre |
-| M2 | Reader | M0 | Library, document and chapter pages render with TOC, prev/next, progress, code, tables, math and images |
-| M5 | URL ingest | M0 | Saved HTML pages (blog, docs, news, JS-heavy, image-heavy) convert offline in tests; images stored locally |
-| M3 | Annotations | M2 | Highlight, note, chapter note, deep link, notebook; anchoring tests incl. re-anchoring and orphans |
-| M4 | Import UI + jobs | M1, M2 | Upload/URL creates a job, shows progress and report, opens the document; runs from docker compose; data survives restart |
-| M6 | CLI + skills | M1, M3 | `lib` works; import → highlight → `/study` → session saved, AI questions anchored |
-| M7 | Search + export | M3 | FTS over chapters and notes; export writes Markdown and JSON |
+| #   | Milestone           | Depends on | Done when                                                                                                                 |
+| --- | ------------------- | ---------- | ------------------------------------------------------------------------------------------------------------------------- |
+| M0  | Scaffold + contract | –          | Monorepo builds; Zod schemas; Drizzle schema + migration; compose Postgres; fixture validates; CLAUDE.md                  |
+| M1  | EPUB + MOBI ingest  | M0         | Public-domain EPUBs import with chapter count matching the TOC, images resolve, report written; MOBI converts via Calibre |
+| M2  | Reader              | M0         | Library, document and chapter pages render with TOC, prev/next, progress, code, tables, math and images                   |
+| M5  | URL ingest          | M0         | Saved HTML pages (blog, docs, news, JS-heavy, image-heavy) convert offline in tests; images stored locally                |
+| M3  | Annotations         | M2         | Highlight, note, chapter note, deep link, notebook; anchoring tests incl. re-anchoring and orphans                        |
+| M4  | Import UI + jobs    | M1, M2     | Upload/URL creates a job, shows progress and report, opens the document; runs from docker compose; data survives restart  |
+| M6  | CLI + skills        | M1, M3     | `lib` works; import → highlight → `/study` → session saved, AI questions anchored                                         |
+| M7  | Search + export     | M3         | FTS over chapters and notes; export writes Markdown and JSON                                                              |
 
 ## Risks
 

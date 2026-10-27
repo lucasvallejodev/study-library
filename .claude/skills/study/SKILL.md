@@ -18,11 +18,12 @@ pnpm -s lib sessions <doc> -c <chapter>                    # past sessions: avoi
 With `--focus <id>`, center the session on that passage (`pnpm -s lib annotations <doc> -c <chapter>` shows it) but still cover the chapter's main ideas.
 
 Plan 5–8 questions that move from **recall → understanding → application**:
+
 1. Recall of key facts/events/definitions (1–2).
 2. "Explain in your own words" for the main ideas (2–3).
 3. Connections: why, cause/effect, compare to another part (1–2).
 4. Application or transfer to a new case, or for fiction: interpretation of character, theme, technique (1–2).
-Prefer passages the user highlighted or annotated: their highlights show what they care about; their notes show their current understanding. Avoid trivia.
+   Prefer passages the user highlighted or annotated: their highlights show what they care about; their notes show their current understanding. Avoid trivia.
 
 ## Run the session
 
@@ -37,7 +38,14 @@ Prefer passages the user highlighted or annotated: their highlights show what th
 ```json
 {
   "questions": [
-    { "question": "…", "answer": "user's answer, condensed", "feedback": "…", "correct": false, "quote": "short passage", "annotationId": "a-… if about a highlight" }
+    {
+      "question": "…",
+      "answer": "user's answer, condensed",
+      "feedback": "…",
+      "correct": false,
+      "quote": "short passage",
+      "annotationId": "a-… if about a highlight"
+    }
   ],
   "score": 0.63,
   "summary": "2–3 sentences: what the user understands well, where the gaps are",

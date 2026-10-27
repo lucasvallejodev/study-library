@@ -1,10 +1,11 @@
-import { NextResponse } from "next/server";
-import { listAnnotations, loadChapter, toAnnotation } from "@/lib/data";
-import { chapterWithAnnotations } from "@/lib/chapter-export";
-import { route } from "@/lib/http";
-import { publicOrigin } from "@/lib/origin";
+import { NextResponse } from 'next/server';
 
-type Ctx = { params: Promise<{ doc: string; chapter: string }> };
+import { chapterWithAnnotations } from '@/lib/chapter-export';
+import { listAnnotations, loadChapter, toAnnotation } from '@/lib/data';
+import { route } from '@/lib/http';
+import { publicOrigin } from '@/lib/origin';
+
+type Ctx = { params: Promise<{ chapter: string; doc: string }> };
 
 /**
  * GET /api/documents/:doc/chapters/:chapter
@@ -13,23 +14,37 @@ type Ctx = { params: Promise<{ doc: string; chapter: string }> };
  *   default                       JSON with markdown, rendered text, annotations
  */
 export const GET = route(async (req: Request, { params }: Ctx) => {
-  const { doc, chapter } = await params;
+  const { chapter, doc } = await params;
   const url = new URL(req.url);
   const loaded = await loadChapter(doc, chapter);
-  const withAnnotations = url.searchParams.get("annotations") === "1";
-  const annotations = withAnnotations || url.searchParams.get("format") !== "md" ? (await listAnnotations({ documentId: doc, chapterId: chapter })).reverse() : [];
-  if (url.searchParams.get("format") === "md") {
+  const withAnnotations = url.searchParams.get('annotations') === '1';
+
+  const annotations =
+    withAnnotations || url.searchParams.get('format') !== 'md'
+      ? (await listAnnotations({ chapterId: chapter, documentId: doc })).reverse()
+      : [];
+
+  if (url.searchParams.get('format') === 'md') {
     const body = withAnnotations
-      ? chapterWithAnnotations({ docId: doc, chapterId: chapter, title: loaded.chapter.title, markdown: loaded.markdown, annotations, origin: publicOrigin(req) })
+      ? chapterWithAnnotations({
+          annotations,
+          chapterId: chapter,
+          docId: doc,
+          markdown: loaded.markdown,
+          origin: publicOrigin(req),
+          title: loaded.chapter.title,
+        })
       : loaded.markdown;
-    return new Response(body, { headers: { "content-type": "text/markdown; charset=utf-8" } });
+
+    return new Response(body, { headers: { 'content-type': 'text/markdown; charset=utf-8' } });
   }
+
   return NextResponse.json({
-    document: { id: loaded.doc.id, title: loaded.doc.title },
-    chapter: loaded.chapter,
-    prev: loaded.prev?.id ?? null,
-    next: loaded.next?.id ?? null,
-    markdown: loaded.markdown,
     annotations: annotations.map(toAnnotation),
+    chapter: loaded.chapter,
+    document: { id: loaded.doc.id, title: loaded.doc.title },
+    markdown: loaded.markdown,
+    next: loaded.next?.id ?? null,
+    prev: loaded.prev?.id ?? null,
   });
 });

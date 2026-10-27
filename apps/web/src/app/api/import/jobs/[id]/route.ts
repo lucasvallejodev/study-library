@@ -1,10 +1,11 @@
-import { existsSync } from "node:fs";
-import { readFile } from "node:fs/promises";
-import path from "node:path";
-import { NextResponse } from "next/server";
-import { documentDir } from "@study/core";
-import { notFound, route } from "@/lib/http";
-import { getJob } from "@/lib/jobs";
+import { NextResponse } from 'next/server';
+import { existsSync } from 'node:fs';
+import { readFile } from 'node:fs/promises';
+import path from 'node:path';
+
+import { notFound, route } from '@/lib/http';
+import { getJob } from '@/lib/jobs';
+import { documentDir } from '@study/core';
 
 type Ctx = { params: Promise<{ id: string }> };
 
@@ -12,11 +13,15 @@ type Ctx = { params: Promise<{ id: string }> };
 export const GET = route(async (_req: Request, { params }: Ctx) => {
   const { id } = await params;
   const job = await getJob(Number(id));
+
   if (!job) notFound(`Job ${id}`);
   let report = null;
-  if (job.status === "done" && job.documentId) {
-    const file = path.join(documentDir(job.documentId), "import-report.json");
-    if (existsSync(file)) report = JSON.parse(await readFile(file, "utf8"));
+
+  if (job.status === 'done' && job.documentId) {
+    const file = path.join(documentDir(job.documentId), 'import-report.json');
+
+    if (existsSync(file)) report = JSON.parse(await readFile(file, 'utf8'));
   }
+
   return NextResponse.json({ ...job, report });
 });

@@ -43,6 +43,7 @@ pnpm -s lib push <doc>          # validates, recomputes hashes/word counts, rewr
 ```
 
 Rules while editing:
+
 - **Never change the `id` of an existing chapter.** Highlights point at chapter ids. New chapters get a new unused id (`ch-NNN` above the current maximum).
 - Retitle: change `title` in `document.json` (frontmatter is rewritten on push).
 - Merge A+B: append B's body to A's file, remove B's entry from `document.json` (keep A's id). Mention that B's highlights would be orphaned if it had any (`pnpm -s lib annotations <doc> -c <B>`).

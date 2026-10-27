@@ -1,24 +1,36 @@
-import { NextResponse } from "next/server";
-import { route } from "@/lib/http";
-import { listLibrary } from "@/lib/data";
+import { NextResponse } from 'next/server';
 
-export const dynamic = "force-dynamic";
+import { listLibrary } from '@/lib/data';
+import { route } from '@/lib/http';
+
+export const dynamic = 'force-dynamic';
 
 /** GET /api/documents?chapters=1 — documents (and optionally their chapter lists). */
 export const GET = route(async (req: Request) => {
-  const withChapters = new URL(req.url).searchParams.get("chapters") === "1";
+  const withChapters = new URL(req.url).searchParams.get('chapters') === '1';
   const cards = await listLibrary();
+
   return NextResponse.json(
-    cards.map(({ doc, percent, lastRead, annotationCount }) => ({
-      id: doc.id,
-      title: doc.title,
-      authors: doc.authors,
-      kind: doc.kind,
-      chapterCount: doc.chapters.length,
-      percent: Math.round(percent * 100) / 100,
-      lastRead: lastRead?.toISOString() ?? null,
+    cards.map(({ annotationCount, doc, lastRead, percent }) => ({
       annotationCount,
-      ...(withChapters ? { chapters: doc.chapters.map(({ id, title, order, matter, wordCount }) => ({ id, title, order, matter, wordCount })) } : {}),
-    })),
+      authors: doc.authors,
+      chapterCount: doc.chapters.length,
+      id: doc.id,
+      kind: doc.kind,
+      lastRead: lastRead?.toISOString() ?? null,
+      percent: Math.round(percent * 100) / 100,
+      title: doc.title,
+      ...(withChapters
+        ? {
+            chapters: doc.chapters.map(({ id, matter, order, title, wordCount }) => ({
+              id,
+              matter,
+              order,
+              title,
+              wordCount,
+            })),
+          }
+        : {}),
+    }))
   );
 });
