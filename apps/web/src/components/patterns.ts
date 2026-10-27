@@ -3,6 +3,7 @@ export const Patterns = {
   escapedMarkClose: /&lt;\/mark>/g,
   escapedMarkOpen: /&lt;mark>/g,
   lessThan: /</g,
+  nonIdCharacter: /[^\w-]/g,
   whitespaceCharacter: /\s/,
 };
 
