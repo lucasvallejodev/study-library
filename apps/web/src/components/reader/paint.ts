@@ -16,7 +16,8 @@ export function paintHighlights(anchored: { a: Annotation; range: Range }[], act
   if (!supportsHighlights()) return paintWithMarks(anchored);
   const groups = new Map<string, Range[]>(HIGHLIGHT_NAMES.map((n) => [n, []]));
   for (const { a, range } of anchored) {
-    groups.get(nameFor(a))!.push(range);
+    // Uncolored notes (e.g. Claude's notes on your highlight) only underline the passage.
+    if (!(a.type === "note" && !a.color)) groups.get(nameFor(a))!.push(range);
     if (a.body) groups.get("hl-note")!.push(range);
     if (a.id === activeId) groups.get("hl-active")!.push(range);
   }

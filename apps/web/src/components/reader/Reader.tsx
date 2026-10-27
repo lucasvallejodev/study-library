@@ -50,6 +50,9 @@ export function Reader(props: Props) {
   const [sheetOpen, setSheetOpen] = useState(false);
   const [toast, setToast] = useState<string>();
   const [progress, setProgress] = useState(props.initialPosition);
+  const [editingId, setEditingId] = useState<string>();
+  const [hoverId, setHoverId] = useState<string>();
+  const [marginMode, setMarginMode] = useState<"notes" | "all">("notes");
   const pulseTimer = useRef<ReturnType<typeof setTimeout>>(undefined);
 
   const flash = useCallback((message: string) => {
@@ -84,9 +87,9 @@ export function Reader(props: Props) {
   useEffect(() => {
     paintHighlights(
       annotations.filter((a) => ranges.has(a.id)).map((a) => ({ a, range: ranges.get(a.id)! })),
-      activeId,
+      hoverId ?? activeId,
     );
-  }, [ranges, annotations, activeId]);
+  }, [ranges, annotations, activeId, hoverId]);
   useEffect(() => clearHighlights, []);
 
   const ordered = useMemo(() => {
@@ -94,6 +97,51 @@ export function Reader(props: Props) {
     placed.sort((x, y) => ranges.get(x.id)!.compareBoundaryPoints(Range.START_TO_START, ranges.get(y.id)!));
     return placed;
   }, [annotations, ranges]);
+  // Google Docs style: notes and Claude's questions sit beside their passage; plain highlights
+  // join them when selected or when the margin is set to show everything.
+  const marginItems = ordered.filter(
+    (a) => marginMode === "all" || a.body || a.type === "ai_question" || a.id === activeId || a.id === editingId,
+  );
+  const marginRef = useRef<HTMLDivElement>(null);
+  const cardRefs = useRef(new Map<string, HTMLDivElement>());
+  const [tops, setTops] = useState<Record<string, number>>({});
+  const [layoutTick, setLayoutTick] = useState(0);
+
+  useEffect(() => {
+    try {
+      if (localStorage.getItem("marginMode") === "all") setMarginMode("all");
+    } catch {}
+    const bump = () => setLayoutTick((n) => n + 1);
+    const observer = new ResizeObserver(bump);
+    if (articleRef.current) observer.observe(articleRef.current);
+    window.addEventListener("resize", bump);
+    return () => {
+      observer.disconnect();
+      window.removeEventListener("resize", bump);
+    };
+  }, []);
+
+  useLayoutEffect(() => {
+    const margin = marginRef.current;
+    if (!margin || margin.offsetParent === null) return; // margin hidden below xl
+    const origin = margin.getBoundingClientRect().top;
+    const gap = 8;
+    const items = marginItems.map((a) => ({
+      id: a.id,
+      want: ranges.get(a.id)!.getBoundingClientRect().top - origin,
+      height: cardRefs.current.get(a.id)?.offsetHeight ?? 96,
+    }));
+    const pos = new Array<number>(items.length);
+    // The focused card sits exactly beside its passage; the others make room above and below it.
+    const pin = Math.max(0, items.findIndex((i) => i.id === (editingId ?? activeId)));
+    pos[pin] = items[pin] ? Math.max(0, items[pin].want) : 0;
+    for (let i = pin + 1; i < items.length; i++) pos[i] = Math.max(items[i]!.want, pos[i - 1]! + items[i - 1]!.height + gap);
+    for (let i = pin - 1; i >= 0; i--) pos[i] = Math.min(items[i]!.want, pos[i + 1]! - items[i]!.height - gap);
+    const next: Record<string, number> = {};
+    items.forEach((item, i) => (next[item.id] = pos[i]!));
+    setTops((prev) => (JSON.stringify(prev) === JSON.stringify(next) ? prev : next));
+  });
+
   const orphans = annotations.filter((a) => a.selectors.length > 0 && !ranges.has(a.id));
   const chapterNotes = annotations.filter((a) => a.selectors.length === 0 && a.type !== "bookmark");
   const bookmark = annotations.find((a) => a.type === "bookmark");
@@ -109,7 +157,8 @@ export function Reader(props: Props) {
       }
       document.getElementById(`card-${id}`)?.scrollIntoView({ block: "nearest", behavior: "smooth" });
       clearTimeout(pulseTimer.current);
-      pulseTimer.current = setTimeout(() => setActiveId((cur) => (cur === id ? undefined : cur)), 2500);
+      // Deep links and card clicks pulse briefly; clicking the text itself keeps the card selected.
+      if (scroll) pulseTimer.current = setTimeout(() => setActiveId((cur) => (cur === id ? undefined : cur)), 2500);
     },
     [ranges],
   );
@@ -235,9 +284,9 @@ export function Reader(props: Props) {
       if (hit) {
         focusAnnotation(hit.id, false);
         if (window.innerWidth < 1280) setSheetOpen(true);
-      }
+      } else if (!editingId) setActiveId(undefined);
     },
-    [ordered, ranges, focusAnnotation],
+    [ordered, ranges, focusAnnotation, editingId],
   );
 
   async function createFromSelection(opts: { color?: HighlightColor; withNote?: boolean }): Promise<Annotation | undefined> {
@@ -265,8 +314,6 @@ export function Reader(props: Props) {
       flash((e as Error).message);
     }
   }
-
-  const [editingId, setEditingId] = useState<string>();
 
   async function copyLink() {
     const a = await createFromSelection({});
@@ -386,7 +433,7 @@ export function Reader(props: Props) {
         </div>
       </div>
 
-      <div className="mx-auto grid max-w-6xl gap-10 px-4 xl:grid-cols-[1fr_680px_1fr]">
+      <div className="mx-auto grid max-w-6xl gap-10 px-4 xl:grid-cols-[minmax(0,1fr)_680px_minmax(300px,1fr)]">
         <div className="hidden xl:block" />
         <main className="min-w-0 py-10">
           {chapter.sourceUrl && (
@@ -397,6 +444,30 @@ export function Reader(props: Props) {
           <div onClick={onArticleClick} className="mx-auto max-w-[680px]">
             <Article html={props.html} articleRef={articleRef} />
           </div>
+
+          {orphans.length > 0 && (
+            <section className="mx-auto mt-12 hidden max-w-[680px] xl:block">
+              <h2 className="mb-1 text-xs font-semibold uppercase tracking-wider text-muted">Orphaned notes ({orphans.length})</h2>
+              <p className="mb-3 text-xs text-muted">The text changed and these passages could not be found.</p>
+              <div className="grid gap-3 sm:grid-cols-2">
+                {orphans.map((a) => (
+                  <AnnotationCard
+                    key={a.id}
+                    annotation={a}
+                    active={a.id === activeId}
+                    editing={a.id === editingId}
+                    onEdit={(v) => setEditingId(v ? a.id : undefined)}
+                    onFocus={() => setActiveId(a.id)}
+                    onChange={updateLocal}
+                    onDelete={() => removeLocal(a.id)}
+                    link={link(a.id)}
+                    studyPrompt={`/study ${doc.id} ${chapter.id} --focus ${a.id}`}
+                    notify={flash}
+                  />
+                ))}
+              </div>
+            </section>
+          )}
 
           <ChapterNotes
             documentId={doc.id}
@@ -431,9 +502,66 @@ export function Reader(props: Props) {
         </main>
 
         <aside className="hidden py-10 xl:block">
-          <div className="sticky top-32 max-h-[calc(100vh-9rem)] overflow-y-auto pr-1">
-            <h2 className="mb-3 text-xs font-semibold uppercase tracking-wider text-muted">In this chapter {count > 0 && `(${count})`}</h2>
-            {cards}
+          <div className="mb-2 flex items-center gap-2 text-xs text-muted">
+            <span className="font-semibold uppercase tracking-wider">Notes</span>
+            <button
+              onClick={() => {
+                const next = marginMode === "all" ? "notes" : "all";
+                setMarginMode(next);
+                try {
+                  localStorage.setItem("marginMode", next);
+                } catch {}
+              }}
+              className="ml-auto rounded px-1.5 py-0.5 hover:bg-panel hover:text-ink"
+              title="Show every highlight in the margin, or only the ones with notes"
+            >
+              {marginMode === "all" ? "All highlights" : "With notes"} ▾
+            </button>
+            <button
+              onClick={async () => {
+                await navigator.clipboard.writeText(`/highlight-notes ${doc.id} ${chapter.id}`).catch(() => {});
+                flash("Prompt copied — paste it into Claude Code");
+              }}
+              className="rounded px-1.5 py-0.5 hover:bg-panel hover:text-ink"
+              title="Copy a Claude Code prompt that writes notes on this chapter's highlights"
+            >
+              ✦ Claude notes
+            </button>
+          </div>
+          <div ref={marginRef} className="relative" style={{ minHeight: "100%" }}>
+            {marginItems.length === 0 && (
+              <p className="text-sm text-muted">Select text to highlight it, then add a note. Notes appear here, beside their passage.</p>
+            )}
+            {marginItems.map((a) => (
+              <div
+                key={a.id}
+                ref={(el) => {
+                  if (el) cardRefs.current.set(a.id, el);
+                  else cardRefs.current.delete(a.id);
+                }}
+                className="absolute inset-x-0 transition-[top,opacity] duration-200"
+                style={{ top: tops[a.id] ?? 0, opacity: a.id in tops ? 1 : 0 }}
+                onMouseEnter={() => setHoverId(a.id)}
+                onMouseLeave={() => setHoverId(undefined)}
+              >
+                <AnnotationCard
+                  annotation={a}
+                  compact
+                  active={a.id === activeId}
+                  editing={a.id === editingId}
+                  onEdit={(v) => {
+                    setEditingId(v ? a.id : undefined);
+                    if (!v) setActiveId(undefined);
+                  }}
+                  onFocus={() => focusAnnotation(a.id)}
+                  onChange={updateLocal}
+                  onDelete={() => removeLocal(a.id)}
+                  link={link(a.id)}
+                  studyPrompt={`/study ${doc.id} ${chapter.id} --focus ${a.id}`}
+                  notify={flash}
+                />
+              </div>
+            ))}
           </div>
         </aside>
       </div>

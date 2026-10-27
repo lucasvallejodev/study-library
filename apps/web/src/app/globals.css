@@ -123,3 +123,4 @@ mark[data-annotation][data-color="pink"] { background: rgb(255 130 180 / 0.38); 
 .swatch-blue { background: rgb(110 170 255); }
 .swatch-pink { background: rgb(255 130 180); }
 .swatch-question { background: rgb(170 140 255); }
+.swatch-claude { background: var(--color-accent); }

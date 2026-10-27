@@ -17,6 +17,8 @@ type Props = {
   link: string;
   studyPrompt: string;
   notify: (m: string) => void;
+  /** Margin mode: the passage is right beside the card, so the quote is shortened. */
+  compact?: boolean;
 };
 
 function quoteOf(a: Annotation): string | undefined {
@@ -24,7 +26,7 @@ function quoteOf(a: Annotation): string | undefined {
   return q?.type === "TextQuoteSelector" ? q.exact : undefined;
 }
 
-export function AnnotationCard({ annotation: a, active, editing, onEdit, onFocus, onChange, onDelete, link, studyPrompt, notify }: Props) {
+export function AnnotationCard({ annotation: a, active, editing, onEdit, onFocus, onChange, onDelete, link, studyPrompt, notify, compact }: Props) {
   const [body, setBody] = useState(a.body ?? "");
   const [tags, setTags] = useState(a.tags.join(", "));
   useEffect(() => {
@@ -32,7 +34,9 @@ export function AnnotationCard({ annotation: a, active, editing, onEdit, onFocus
     setTags(a.tags.join(", "));
   }, [a.body, a.tags]);
   const quote = quoteOf(a);
-  const swatch = a.type === "ai_question" ? "question" : (a.color ?? "yellow");
+  const byClaude = a.tags.includes("claude");
+  const swatch = a.type === "ai_question" ? "question" : byClaude && !a.color ? "claude" : (a.color ?? "yellow");
+  const visibleTags = byClaude ? a.tags.filter((t) => t !== "claude") : a.tags;
 
   async function save() {
     const updated = await api.update(a.id, {
@@ -56,13 +60,15 @@ export function AnnotationCard({ annotation: a, active, editing, onEdit, onFocus
   return (
     <div
       id={`card-${a.id}`}
-      className={`rounded-lg border p-3 text-sm transition ${active ? "border-accent bg-panel shadow-sm" : "border-line"}`}
+      className={`rounded-lg border p-3 text-sm transition ${active ? "border-accent bg-panel shadow-md" : "border-line bg-paper"} ${compact && active ? "-translate-x-2" : ""}`}
     >
-      {a.type === "ai_question" && <div className="mb-1 text-[11px] font-semibold uppercase tracking-wider text-muted">Claude asked</div>}
+      {(a.type === "ai_question" || byClaude) && (
+        <div className="mb-1 text-[11px] font-semibold uppercase tracking-wider text-muted">{a.type === "ai_question" ? "Claude asked" : "Claude’s note"}</div>
+      )}
       {quote && (
         <button onClick={onFocus} className="flex w-full gap-2 text-left">
           <span className={`swatch-${swatch} mt-1 w-1 shrink-0 self-stretch rounded-full`} />
-          <span className="line-clamp-4 font-serif text-[0.95rem] leading-snug">{quote}</span>
+          <span className={`${compact ? "line-clamp-1 text-muted" : "line-clamp-4"} font-serif text-[0.95rem] leading-snug`}>{quote}</span>
         </button>
       )}
       {editing ? (
@@ -93,9 +99,9 @@ export function AnnotationCard({ annotation: a, active, editing, onEdit, onFocus
       ) : (
         <>
           {a.body && <p className="mt-2 whitespace-pre-wrap">{a.body}</p>}
-          {a.tags.length > 0 && (
+          {visibleTags.length > 0 && (
             <div className="mt-2 flex flex-wrap gap-1">
-              {a.tags.map((t) => (
+              {visibleTags.map((t) => (
                 <a key={t} href={`/notebook?tag=${encodeURIComponent(t)}`} className="rounded-full bg-panel px-2 text-xs text-muted">#{t}</a>
               ))}
             </div>
