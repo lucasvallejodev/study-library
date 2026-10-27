@@ -8,6 +8,8 @@ export {
   deleteAnnotation,
   getAnnotation,
   listAnnotations,
+  listTags,
+  type TagUsage,
   toAnnotation,
   updateAnnotation,
 } from './annotations';

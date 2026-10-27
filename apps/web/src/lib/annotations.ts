@@ -223,3 +223,27 @@ export const deleteAnnotation = async (id: string): Promise<void> => {
 
   if (!deleted.length) notFound(`Annotation ${id}`);
 };
+
+/** A tag in use and how many annotations carry it. */
+export type TagUsage = {
+  count: number;
+  tag: string;
+};
+
+/**
+ * Lists every tag used on any annotation, most used first.
+ *
+ * @returns One entry per distinct tag, ordered by usage and then alphabetically.
+ */
+export const listTags = async (): Promise<TagUsage[]> => {
+  const usage = sql<number>`count(*)::int`;
+  const tag = sql<string>`jsonb_array_elements_text(${t.annotations.tags})`;
+
+  const rows = await getDb()
+    .select({ count: usage, tag })
+    .from(t.annotations)
+    .groupBy(sql`2`)
+    .orderBy(desc(usage), sql`2`);
+
+  return rows;
+};
