@@ -6,10 +6,8 @@ import { lastLineOf } from './passages';
 import type { ElementRef } from './reader-types';
 import { useLayoutTick } from './use-layout-tick';
 
-const BUBBLE_MAX_WIDTH = 600;
 const GAP_BELOW_PASSAGE = 10;
 const CARET_INSET = 24;
-const LEFT_OVERHANG = 32;
 
 export type BubblePosition = {
   caretLeft: number;
@@ -34,16 +32,14 @@ function measureBubble(range: Range, article: HTMLElement, wrapper: HTMLElement)
   if (!line) return undefined;
   const origin = wrapper.getBoundingClientRect();
   const column = article.getBoundingClientRect();
-  const width = Math.min(BUBBLE_MAX_WIDTH, column.width);
-  const columnLeft = column.left - origin.left;
+  const left = column.left - origin.left;
   const lineLeft = line.left - origin.left;
-  const left = clamp(lineLeft - LEFT_OVERHANG, columnLeft, columnLeft + column.width - width);
 
   return {
-    caretLeft: clamp(lineLeft - left + CARET_INSET, CARET_INSET, width - CARET_INSET),
+    caretLeft: clamp(lineLeft - left + CARET_INSET, CARET_INSET, column.width - CARET_INSET),
     left,
     top: line.bottom - origin.top + GAP_BELOW_PASSAGE,
-    width,
+    width: column.width,
   };
 }
 
