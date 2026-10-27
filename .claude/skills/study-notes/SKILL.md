@@ -1,7 +1,7 @@
 ---
 name: study-notes
-description: Create study material from a document in the Study Library — chapter summaries, key ideas, glossaries, timelines, character lists or practice questions — and save it as chapter notes the reader shows under each chapter. Use for "summarize this chapter/book", "make study notes", "create a glossary/flashcards for…".
-argument-hint: <doc> [chapter|all] [summary|glossary|questions|characters|timeline]
+description: Create study material from a document in the Study Library — chapter summaries at the length you want (TL;DR, one page, section by section, or only your highlights), key ideas, glossaries, timelines, character lists or practice questions — and save it as chapter notes the reader shows under each chapter. Use for "summarize this chapter/book", "make study notes", "create a glossary/flashcards for…".
+argument-hint: <doc> [chapter|all|a-id] [summary|glossary|questions|characters|timeline] [--length tldr|page|sections|highlights]
 ---
 
 # Study notes from a book
@@ -13,7 +13,20 @@ pnpm -s lib show <doc>                                   # chapters (skip matter
 pnpm -s lib chapter <doc> <ch> --with-annotations        # text plus the user's own highlights and notes
 ```
 
-For a whole book, work chapter by chapter (body chapters only) and keep each note self-contained.
+For a whole book, work chapter by chapter (body chapters only) and keep each note self-contained. Follow `_agents/conventions/skills.md`; when the chapter has figures, run `pnpm -s lib assets <doc> <chapter>` and use what they show (a diagram often is the summary).
+
+If the user did not say what they want, ask once (one message): "1) What for [quick refresher] 2) Length [TL;DR]".
+
+## Summary lengths
+
+| `--length`   | What to write                                                                                                            |
+| ------------ | ------------------------------------------------------------------------------------------------------------------------ |
+| `tldr`       | 3–5 bullets, one idea each, no intro.                                                                                    |
+| `page`       | Default: the template below, about one screen.                                                                           |
+| `sections`   | One short paragraph per section heading of the chapter (`##`/`###`), in order, each linking the user's highlights in it. |
+| `highlights` | Only what the user highlighted and noted, grouped by idea, with their notes woven in — a summary of _their_ reading.     |
+
+A highlight id instead of a chapter (`a-xxxxxx`): summarize the passage and the paragraphs around it in plain words, and save it on the highlight (`--on <id>`).
 
 ## Write
 

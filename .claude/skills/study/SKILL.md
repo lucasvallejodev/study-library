@@ -15,6 +15,8 @@ pnpm -s lib chapter <doc> <chapter> --with-annotations   # text + ==highlights==
 pnpm -s lib sessions <doc> -c <chapter>                    # past sessions: avoid repeating questions, revisit misses
 ```
 
+If the chapter has figures, `pnpm -s lib assets <doc> <chapter>` saves them to `_temp/assets/`; open the ones that matter, since diagrams often explain what the text only names.
+
 With `--focus <id>`, center the session on that passage (`pnpm -s lib annotations <doc> -c <chapter>` shows it) but still cover the chapter's main ideas.
 
 Plan 5–8 questions that move from **recall → understanding → application**:

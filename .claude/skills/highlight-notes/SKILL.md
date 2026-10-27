@@ -16,6 +16,8 @@ pnpm -s lib annotations <doc> -c <chapter> -t highlight        # ids, quotes, co
 pnpm -s lib annotations <doc> -c <chapter> --tag claude        # notes you already wrote: don't duplicate
 ```
 
+If the chapter has figures, `pnpm -s lib assets <doc> <chapter>` saves them to `_temp/assets/`; open the ones that matter, since diagrams often explain what the text only names.
+
 No chapter given: `pnpm -s lib annotations <doc> -t highlight --since 30d` and group by chapter (or ask which chapter if there are many). `all` = every chapter with highlights. `--only <id>` = just that highlight.
 
 Skip highlights that already have a `claude` note on the same passage unless the user asks to redo them (then update with `lib edit-note <id> --body …`).
