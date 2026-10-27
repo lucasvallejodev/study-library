@@ -7,6 +7,7 @@
   - `study`: `/study <doc> <chapter> [--focus <annotation-id>]` runs a study session.
   - `review`: `/review [days]` mixed review of recent highlights and missed questions.
   - `study-notes`: write summaries, key ideas and glossaries for chapters as chapter notes.
+  - `highlight-notes`: `/highlight-notes <doc> [chapter]` writes Claude's notes beside the user's highlights (margin, tagged `claude`).
   - `pdf-to-library`: turn a PDF (or any document Claude can read) into a library document.
   - `verify-mvp`: end-to-end check of the whole app after changes.
 - The `lib` CLI is the interface to the library for study work. Always call it as `pnpm -s lib …` from the repo root. It needs the web app running (`pnpm dev` locally, or `LIB_API_URL=http://homeserver:3000`).

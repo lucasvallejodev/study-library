@@ -15,7 +15,7 @@ packages/core/       THE CONTRACT: Zod schemas (document.json, frontmatter, anno
 packages/ingest/     Importers: epub.ts, calibre.ts (MOBI/AZW), url.ts (Defuddle), markdown.ts, writer.ts
 packages/anchoring/  W3C TextQuote/TextPosition selectors, fuzzy re-anchoring, DOM range helpers
 packages/cli/        `lib` command; talks ONLY to the web app's HTTP API (LIB_API_URL)
-.claude/skills/      Claude Code skills (import-source, study, review, study-notes, pdf-to-library, verify-mvp)
+.claude/skills/      Claude Code skills (import-source, study, review, study-notes, highlight-notes, pdf-to-library, verify-mvp)
 _agents/             Docs for agents: product plan, architecture, contracts, runbooks, decisions, conventions
 fixtures/            Offline test inputs (saved HTML pages, images, Markdown)
 samples/             Public-domain Standard Ebooks EPUBs used by tests
