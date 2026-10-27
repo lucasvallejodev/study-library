@@ -10,6 +10,7 @@ type ReaderToolbarProps = {
   chapterTitle: string;
   doc: ReaderDocument;
   noteCount: number;
+  onCopyAiPrompt: () => Promise<void>;
   onCopyClaudeNotesPrompt: () => Promise<void>;
   onOpenToc: () => void;
   onToggleBookmark: () => Promise<void>;
@@ -56,6 +57,13 @@ export function ReaderToolbar(props: ReaderToolbarProps) {
           title={bookmarked ? 'Remove bookmark' : 'Bookmark chapter'}
         >
           {bookmarked ? '★' : '☆'}
+        </button>
+        <button
+          onClick={props.onCopyAiPrompt}
+          className="hidden shrink-0 whitespace-nowrap rounded px-2 py-1 text-muted hover:bg-panel hover:text-ink sm:block"
+          title="Copy this chapter with your highlights as a prompt for any AI assistant"
+        >
+          ⧉ Copy for AI
         </button>
         <button
           onClick={props.onCopyClaudeNotesPrompt}

@@ -28,6 +28,34 @@ export function studyPrompt(docId: string, chapterId: string, annotationId: stri
   return `/study ${docId} ${chapterId} --focus ${annotationId}`;
 }
 
+export function aiPromptPath(docId: string, chapterId: string, annotationId?: string): string {
+  const query = annotationId ? `?annotation=${annotationId}` : '';
+
+  return `/api/documents/${docId}/chapters/${chapterId}/ai-prompt${query}`;
+}
+
+async function fetchText(path: string): Promise<string> {
+  const response = await fetch(path);
+
+  if (!response.ok) throw new Error(`Could not load ${path}`);
+
+  return response.text();
+}
+
+function asPlainTextBlob(text: Promise<string>): Promise<Blob> {
+  return text.then(value => new Blob([value], { type: 'text/plain' }));
+}
+
+export async function copyTextFrom(path: string): Promise<void> {
+  const text = fetchText(path);
+
+  try {
+    await navigator.clipboard.write([new ClipboardItem({ 'text/plain': asPlainTextBlob(text) })]);
+  } catch {
+    await copyText(await text);
+  }
+}
+
 export async function copyText(text: string): Promise<void> {
   await navigator.clipboard.writeText(text).catch(ignoreFailure);
 }

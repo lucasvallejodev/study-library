@@ -2,7 +2,7 @@
 
 import { useRef, useState } from 'react';
 
-import { annotationPath, copyText } from '../annotations';
+import { aiPromptPath, annotationPath, copyText, copyTextFrom } from '../annotations';
 import { ArticleRenderedOnce } from './article';
 import { ChapterNavigation } from './chapter-navigation';
 import { ChapterNotes } from './chapter-notes';
@@ -184,6 +184,11 @@ function ReaderHeader(props: ReaderSectionProps & { panels: ReaderPanels }) {
     notify('Prompt copied — paste it into Claude Code');
   }
 
+  async function copyChapterAiPrompt() {
+    await copyTextFrom(aiPromptPath(doc.id, chapter.id));
+    notify('Chapter copied — paste it into any AI assistant');
+  }
+
   return (
     <>
       <ReadingProgressBar progress={progress} />
@@ -193,6 +198,7 @@ function ReaderHeader(props: ReaderSectionProps & { panels: ReaderPanels }) {
         doc={doc}
         noteCount={annotations.ordered.length + annotations.orphans.length}
         onOpenToc={panels.openToc}
+        onCopyAiPrompt={copyChapterAiPrompt}
         onCopyClaudeNotesPrompt={copyClaudeNotesPrompt}
         onToggleBookmark={toggleBookmark}
         onToggleSheet={panels.toggleSheet}

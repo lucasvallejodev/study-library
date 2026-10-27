@@ -4,7 +4,14 @@ import { useState } from 'react';
 
 import type { Annotation, HighlightColor } from '@study/core';
 
-import { copyText, HighlightColors, quoteOf, tagHref } from '../annotations';
+import {
+  aiPromptPath,
+  copyText,
+  copyTextFrom,
+  HighlightColors,
+  quoteOf,
+  tagHref,
+} from '../annotations';
 import { DeleteAnnotationConfirmation } from '../dialogs/confirmations';
 import { useDialogs } from '../dialogs/dialog-provider';
 import { type MarkdownSize, MarkdownView } from '../notes/markdown-view';
@@ -261,6 +268,12 @@ function CardActions({
     notify('Prompt copied — paste it into Claude Code');
   }
 
+  async function copyAiPrompt() {
+    if (!annotation.documentId || !annotation.chapterId) return;
+    await copyTextFrom(aiPromptPath(annotation.documentId, annotation.chapterId, annotation.id));
+    notify('Copied — paste it into any AI assistant');
+  }
+
   async function remove() {
     if (!(await dialogs.confirm(DeleteAnnotationConfirmation))) return;
     await AnnotationApi.remove(annotation.id);
@@ -281,6 +294,15 @@ function CardActions({
       <button onClick={copyStudyPrompt} className="hover:text-ink">
         Ask Claude
       </button>
+      {annotation.chapterId && (
+        <button
+          onClick={copyAiPrompt}
+          className="hover:text-ink"
+          title="Copy the passage, your note and its context as a prompt for any AI assistant"
+        >
+          Copy for AI
+        </button>
+      )}
       <button onClick={remove} className="ml-auto hover:text-red-600">
         Delete
       </button>

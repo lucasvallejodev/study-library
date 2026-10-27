@@ -8,6 +8,7 @@ export const Patterns = {
   lineBreakRun: /\n+/g,
   lineStart: /^/gm,
   parentDirectoryPrefix: /^\.\.\//,
+  relativeAssetReference: /\.\.\/assets\//g,
   relativeDuration: /^(\d+)([dhm])$/,
   trailingSlash: /\/$/,
 };
