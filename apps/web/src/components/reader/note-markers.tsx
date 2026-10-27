@@ -66,7 +66,7 @@ export function NoteMarkers(props: NoteMarkersProps) {
       onClick={() => props.onOpen(marker.annotationId)}
       aria-label="Open the notes on this passage"
       title="Notes"
-      className="absolute z-10 rounded-full bg-accent ring-2 ring-paper hover:scale-125"
+      className="absolute z-5 rounded-full bg-accent ring-2 ring-paper hover:scale-125"
       style={{
         height: MARKER_SIZE,
         left: marker.left,

@@ -80,7 +80,7 @@ export function NoteBubble(props: NoteBubbleProps) {
       ref={bubbleRef}
       role="dialog"
       aria-label="Notes on this passage"
-      className="absolute z-30 rounded-xl border border-line bg-panel px-5 py-2 font-sans shadow-2xl"
+      className="absolute z-10 rounded-xl border border-line bg-panel px-5 py-2 font-sans shadow-2xl"
       style={bubbleStyle(position)}
       onMouseUp={event => event.stopPropagation()}
     >

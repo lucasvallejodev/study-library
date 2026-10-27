@@ -75,7 +75,7 @@ export function SelectionPopover(props: SelectionPopoverProps) {
 
   return (
     <div
-      className="absolute z-40 flex items-center gap-1 rounded-lg border border-line bg-panel p-1.5 font-sans text-sm shadow-xl ring-1 ring-black/5"
+      className="absolute z-15 flex items-center gap-1 rounded-lg border border-line bg-panel p-1.5 font-sans text-sm shadow-xl ring-1 ring-black/5"
       style={{ left: popover.left, top: popover.top }}
       onMouseUp={event => event.stopPropagation()}
       onMouseDown={event => event.preventDefault()}
