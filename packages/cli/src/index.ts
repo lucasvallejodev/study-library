@@ -9,6 +9,7 @@ import {
   registerDeleteNote,
   registerEditNote,
 } from './commands/annotations';
+import { registerAssets } from './commands/assets';
 import {
   registerImport,
   registerJobs,
@@ -29,6 +30,7 @@ const CommandsInHelpOrder = [
   registerList,
   registerShow,
   registerChapter,
+  registerAssets,
   registerAnnotations,
   registerAddNote,
   registerEditNote,

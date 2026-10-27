@@ -3,6 +3,7 @@ import path from 'node:path';
 
 const WORKSPACE_MARKER = 'pnpm-workspace.yaml';
 const EDIT_FOLDER = '_temp/edit';
+const ASSETS_FOLDER = '_temp/assets';
 
 const findRepoRoot = (): string => {
   let dir = process.cwd();
@@ -19,3 +20,9 @@ const findRepoRoot = (): string => {
 
 export const resolveEditFolder = (doc: string, dir: string | undefined): string =>
   path.resolve(dir ?? path.join(findRepoRoot(), EDIT_FOLDER, doc));
+
+export const resolveAssetsFolder = (
+  doc: string,
+  chapter: string,
+  dir: string | undefined
+): string => path.resolve(dir ?? path.join(findRepoRoot(), ASSETS_FOLDER, doc, chapter));

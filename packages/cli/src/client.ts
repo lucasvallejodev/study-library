@@ -63,3 +63,11 @@ export const request = async <T>(path: string, options: RequestOptions = {}): Pr
 
   return body as T;
 };
+
+export const download = async (path: string): Promise<Buffer> => {
+  const response = await fetchFromServer(path, {});
+
+  if (!response.ok) throw new ApiError(response.status, errorMessage(await readBody(response)));
+
+  return Buffer.from(await response.arrayBuffer());
+};
