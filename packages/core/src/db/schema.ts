@@ -32,7 +32,7 @@ export const documents = pgTable(
     importedAt: timestamp('imported_at', { withTimezone: true }).notNull().defaultNow(),
     updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
   },
-  t => [index('documents_title_trgm').using('gin', sql`${t.title} gin_trgm_ops`)]
+  table => [index('documents_title_trgm').using('gin', sql`${table.title} gin_trgm_ops`)]
 );
 
 /** One row per chapter file. plain_text feeds the search vector. Rebuildable from disk. */
@@ -55,15 +55,18 @@ export const chapters = pgTable(
       sql`setweight(to_tsvector('english', coalesce(title, '')), 'A') || setweight(to_tsvector('english', coalesce(plain_text, '')), 'B')`
     ),
   },
-  t => [
-    primaryKey({ columns: [t.documentId, t.id] }),
-    index('chapters_search_idx').using('gin', t.search),
+  table => [
+    primaryKey({ columns: [table.documentId, table.id] }),
+    index('chapters_search_idx').using('gin', table.search),
   ]
 );
 
 /**
  * Your highlights and notes: NOT rebuildable from disk, back them up with `pnpm lib export`.
  * No FK to chapters on purpose: re-imports replace chapter rows, annotations must survive.
+ *
+ * @remarks
+ * `quote` is the denormalised `TextQuoteSelector.exact`, for search and listing.
  */
 export const annotations = pgTable(
   'annotations',
@@ -74,7 +77,6 @@ export const annotations = pgTable(
     type: text('type').notNull(),
     color: text('color'),
     selectors: jsonb('selectors').$type<Selector[]>().notNull().default([]),
-    /** Denormalised TextQuoteSelector.exact, for search and listing. */
     quote: text('quote'),
     body: text('body'),
     tags: jsonb('tags').$type<string[]>().notNull().default([]),
@@ -85,26 +87,32 @@ export const annotations = pgTable(
       sql`setweight(to_tsvector('english', coalesce(quote, '')), 'A') || setweight(to_tsvector('english', coalesce(body, '')), 'B')`
     ),
   },
-  t => [
-    index('annotations_chapter_idx').on(t.documentId, t.chapterId),
-    index('annotations_created_idx').on(t.createdAt),
-    index('annotations_search_idx').using('gin', t.search),
+  table => [
+    index('annotations_chapter_idx').on(table.documentId, table.chapterId),
+    index('annotations_created_idx').on(table.createdAt),
+    index('annotations_search_idx').using('gin', table.search),
   ]
 );
 
+/**
+ * Where the reader left off in each chapter.
+ *
+ * @remarks
+ * `position` is the scroll position through the chapter, from 0 to 1.
+ */
 export const readingProgress = pgTable(
   'reading_progress',
   {
     documentId: text('document_id').notNull(),
     chapterId: text('chapter_id').notNull(),
-    /** 0..1 scroll position through the chapter. */
     position: real('position').notNull().default(0),
     percent: real('percent').notNull().default(0),
     updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
   },
-  t => [primaryKey({ columns: [t.documentId, t.chapterId] })]
+  table => [primaryKey({ columns: [table.documentId, table.chapterId] })]
 );
 
+/** A study question as stored in `study_sessions.questions`. */
 export type StoredQuestion = {
   annotationId?: string;
   answer?: string;
@@ -114,6 +122,7 @@ export type StoredQuestion = {
   quote?: string;
 };
 
+/** Saved study and review sessions: NOT rebuildable from disk. */
 export const studySessions = pgTable('study_sessions', {
   id: serial('id').primaryKey(),
   documentId: text('document_id').notNull(),
@@ -126,9 +135,14 @@ export const studySessions = pgTable('study_sessions', {
   createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
 });
 
+/**
+ * Queue of imports run by the web app.
+ *
+ * @remarks
+ * `inputType` is `file` (an uploaded path in `input`) or `url`.
+ */
 export const importJobs = pgTable('import_jobs', {
   id: serial('id').primaryKey(),
-  /** "file" (uploaded path) or "url" */
   inputType: text('input_type').notNull(),
   input: text('input').notNull(),
   originalName: text('original_name'),

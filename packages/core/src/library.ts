@@ -4,6 +4,7 @@ import { mkdir, readdir, readFile, rename, rm, writeFile } from 'node:fs/promise
 import path from 'node:path';
 import YAML from 'yaml';
 
+import { isSlugId, Patterns } from './patterns';
 import {
   type ChapterEntry,
   type ChapterFrontmatter,
@@ -12,7 +13,47 @@ import {
   type LibraryDocument,
 } from './schemas';
 
-/** Root of the on-disk library. LIBRARY_DIR wins; otherwise `<repo>/library`. */
+const WORKSPACE_MARKER = 'pnpm-workspace.yaml';
+const DOCUMENT_FILE = 'document.json';
+const JSON_INDENT = 2;
+
+let cachedRepoRoot: string | undefined;
+
+const searchRepoRoot = (): string => {
+  let dir = process.cwd();
+
+  while (true) {
+    if (existsSync(path.join(dir, WORKSPACE_MARKER))) return dir;
+    const parent = path.dirname(dir);
+
+    if (parent === dir) return process.cwd();
+    dir = parent;
+  }
+};
+
+/**
+ * Finds the root of the pnpm workspace by walking up from the working directory.
+ *
+ * @remarks
+ * The result is cached for the life of the process. Falls back to the working directory
+ * when no `pnpm-workspace.yaml` is found.
+ *
+ * @returns The absolute path of the repository root.
+ */
+export const findRepoRoot = (): string => {
+  cachedRepoRoot ??= searchRepoRoot();
+
+  return cachedRepoRoot;
+};
+
+/**
+ * Locates the root of the on-disk library.
+ *
+ * @remarks
+ * `LIBRARY_DIR` wins, resolved against the repository root; otherwise `<repo>/library`.
+ *
+ * @returns The absolute path of the library folder.
+ */
 export const libraryDir = (): string => {
   const configured = process.env.LIBRARY_DIR;
 
@@ -21,42 +62,33 @@ export const libraryDir = (): string => {
   return path.join(findRepoRoot(), 'library');
 };
 
-/** Repo-level scratch folder for uploads and agent work. */
+/**
+ * Locates the repo-level scratch folder for uploads and agent work.
+ *
+ * @returns The absolute path of `<repo>/_temp`.
+ */
 export const tempDir = (): string => path.join(findRepoRoot(), '_temp');
 
-let repoRoot: string | undefined;
-
 /**
+ * Locates the folder of one document in the library.
  *
- */
-export const findRepoRoot = (): string => {
-  if (repoRoot) return repoRoot;
-  let dir = process.cwd();
-
-  while (true) {
-    if (existsSync(path.join(dir, 'pnpm-workspace.yaml'))) return (repoRoot = dir);
-    const parent = path.dirname(dir);
-
-    if (parent === dir) return (repoRoot = process.cwd());
-    dir = parent;
-  }
-};
-
-/**
- *
- * @param docId
+ * @param docId - Document id (a lowercase slug).
+ * @returns The absolute path of `library/<docId>`.
+ * @throws Error when `docId` is not a valid slug, so it can never escape the library.
  */
 export const documentDir = (docId: string): string => {
-  if (!/^[a-z0-9][a-z0-9-]*$/.test(docId)) throw new Error(`Invalid document id: ${docId}`);
+  if (!isSlugId(docId)) throw new Error(`Invalid document id: ${docId}`);
 
   return path.join(libraryDir(), docId);
 };
 
 /**
- * Resolve a path inside a document folder, refusing anything that escapes it.
+ * Resolves a path inside a document folder, refusing anything that escapes it.
  *
- * @param docId
- * @param relative
+ * @param docId - Document id (a lowercase slug).
+ * @param relative - Path relative to the document folder.
+ * @returns The absolute resolved path.
+ * @throws Error when `docId` is invalid or the path points outside the document folder.
  */
 export const resolveInDocument = (docId: string, relative: string): string => {
   const base = documentDir(docId);
@@ -70,48 +102,73 @@ export const resolveInDocument = (docId: string, relative: string): string => {
 };
 
 /**
+ * Hashes content with SHA-256.
  *
- * @param content
+ * @param content - Text (hashed as UTF-8) or raw bytes.
+ * @returns The lowercase hex digest.
  */
 export const sha256 = (content: string | Buffer): string =>
   createHash('sha256').update(content).digest('hex');
 
 /**
+ * Computes the `contentHash` stored for a chapter in `document.json`.
  *
- * @param markdown
+ * @param markdown - Chapter body, without frontmatter.
+ * @returns The hash prefixed with its algorithm, such as `sha256:ab12…`.
  */
 export const contentHash = (markdown: string): string => `sha256:${sha256(markdown)}`;
 
 /**
+ * Counts the words of a Markdown text, ignoring markup.
  *
- * @param markdown
+ * @param markdown - Markdown source.
+ * @returns The number of words (runs of letters and digits, with inner apostrophes and dashes).
  */
 export const countWords = (markdown: string): number => {
-  const text = stripMarkdown(markdown);
-  const words = text.match(/[\p{L}\p{N}][\p{L}\p{N}'’-]*/gu);
+  const words = stripMarkdown(markdown).match(Patterns.word);
 
   return words ? words.length : 0;
 };
 
+const removeCodeFenceMarkers = (codeBlock: string): string =>
+  codeBlock.replace(Patterns.codeFenceMarker, '');
+
 /**
- * Rough Markdown-to-text for search indexing and word counts.
+ * Converts Markdown to rough plain text for search indexing and word counts.
  *
- * @param markdown
+ * @remarks
+ * Drops frontmatter, images, HTML tags, footnote markers and inline symbols, keeps link
+ * text and code, and collapses whitespace. Not a faithful renderer.
+ *
+ * @param markdown - Markdown source, with or without frontmatter.
+ * @returns Single-line plain text.
  */
 export const stripMarkdown = (markdown: string): string =>
   markdown
-    .replace(/^---\n[\s\S]*?\n---\n/, '')
-    .replace(/```[\s\S]*?```/g, m => m.replace(/```\w*/g, ''))
-    .replace(/!\[[^\]]*\]\([^)]*\)/g, ' ')
-    .replace(/\[([^\]]*)\]\([^)]*\)/g, '$1')
-    .replace(/<[^>]+>/g, ' ')
-    .replace(/\[\^[^\]]+\]:?/g, ' ')
-    .replace(/[*_`~#>|\\]/g, ' ')
-    .replace(/\s+/g, ' ')
+    .replace(Patterns.frontmatterBlock, '')
+    .replace(Patterns.codeFence, removeCodeFenceMarkers)
+    .replace(Patterns.markdownImage, ' ')
+    .replace(Patterns.markdownLinkWithText, '$1')
+    .replace(Patterns.htmlTag, ' ')
+    .replace(Patterns.footnoteMarker, ' ')
+    .replace(Patterns.inlineMarkdownSymbols, ' ')
+    .replace(Patterns.whitespaceRun, ' ')
     .trim();
 
+const compareCodeUnits = (left: string, right: string): number => {
+  if (left < right) return -1;
+  if (left > right) return 1;
+
+  return 0;
+};
+
 /**
+ * Lists the ids of every document folder in the library.
  *
+ * @remarks
+ * Only folders that contain a `document.json` count; hidden folders are skipped.
+ *
+ * @returns The document ids in code-unit order, or an empty list when the library is missing.
  */
 export const listDocumentIds = async (): Promise<string[]> => {
   const root = libraryDir();
@@ -121,29 +178,35 @@ export const listDocumentIds = async (): Promise<string[]> => {
 
   return entries
     .filter(
-      e =>
-        e.isDirectory() &&
-        !e.name.startsWith('.') &&
-        existsSync(path.join(root, e.name, 'document.json'))
+      entry =>
+        entry.isDirectory() &&
+        !entry.name.startsWith('.') &&
+        existsSync(path.join(root, entry.name, DOCUMENT_FILE))
     )
-    .map(e => e.name)
-    .sort();
+    .map(entry => entry.name)
+    .sort(compareCodeUnits);
 };
 
 /**
+ * Reads and validates a document's `document.json`.
  *
- * @param docId
+ * @param docId - Document id (a lowercase slug).
+ * @returns The parsed document, with schema defaults applied.
+ * @throws Error when the id is invalid, the file cannot be read, or it fails validation.
  */
 export const readDocument = async (docId: string): Promise<LibraryDocument> => {
-  const raw = await readFile(path.join(documentDir(docId), 'document.json'), 'utf8');
+  const raw = await readFile(path.join(documentDir(docId), DOCUMENT_FILE), 'utf8');
 
   return DocumentSchema.parse(JSON.parse(raw));
 };
 
 /**
+ * Validates a document and writes it as `document.json`.
  *
- * @param doc
- * @param dir
+ * @param doc - The document to write.
+ * @param dir - Target folder; defaults to the document's folder in the library.
+ * @returns Resolves once the file is written.
+ * @throws ZodError when the document fails validation.
  */
 export const writeDocument = async (
   doc: LibraryDocument,
@@ -152,20 +215,26 @@ export const writeDocument = async (
   const valid = DocumentSchema.parse(doc);
 
   await mkdir(dir, { recursive: true });
-  await writeFile(path.join(dir, 'document.json'), JSON.stringify(valid, null, 2) + '\n');
+  await writeFile(path.join(dir, DOCUMENT_FILE), JSON.stringify(valid, null, JSON_INDENT) + '\n');
 };
 
 /**
+ * Tells whether a document exists in the library.
  *
- * @param docId
+ * @param docId - Document id (a lowercase slug).
+ * @returns True when its `document.json` is on disk.
+ * @throws Error when the id is invalid.
  */
 export const documentExists = (docId: string): boolean =>
-  existsSync(path.join(documentDir(docId), 'document.json'));
+  existsSync(path.join(documentDir(docId), DOCUMENT_FILE));
 
 /**
+ * Builds the contents of a chapter file: YAML frontmatter followed by the Markdown body.
  *
- * @param front
- * @param body
+ * @param front - Chapter frontmatter.
+ * @param body - Chapter Markdown; surrounding whitespace is trimmed.
+ * @returns The file contents, ending in a newline.
+ * @throws ZodError when the frontmatter fails validation.
  */
 export const buildChapterFile = (front: ChapterFrontmatter, body: string): string => {
   const yaml = YAML.stringify(ChapterFrontmatterSchema.parse(front), { lineWidth: 0 }).trimEnd();
@@ -174,13 +243,18 @@ export const buildChapterFile = (front: ChapterFrontmatter, body: string): strin
 };
 
 /**
+ * Splits a chapter file into its frontmatter and body.
  *
- * @param content
+ * @remarks
+ * The frontmatter is not validated. A file without frontmatter is returned whole as body.
+ *
+ * @param content - Contents of a chapter file.
+ * @returns The Markdown body and the parsed frontmatter fields.
  */
 export const parseChapterFile = (
   content: string
 ): { body: string; front: Partial<ChapterFrontmatter> } => {
-  const match = /^---\r?\n([\s\S]*?)\r?\n---\r?\n?/.exec(content);
+  const match = Patterns.frontmatterWithBody.exec(content);
 
   if (!match) return { body: content, front: {} };
 
@@ -191,9 +265,12 @@ export const parseChapterFile = (
 };
 
 /**
+ * Reads the Markdown body of one chapter from disk.
  *
- * @param docId
- * @param chapter
+ * @param docId - Document id (a lowercase slug).
+ * @param chapter - The chapter's entry in `document.json`.
+ * @returns The chapter body, without frontmatter.
+ * @throws Error when the path escapes the document folder or the file cannot be read.
  */
 export const readChapterBody = async (docId: string, chapter: ChapterEntry): Promise<string> => {
   const raw = await readFile(resolveInDocument(docId, chapter.file), 'utf8');
@@ -202,10 +279,16 @@ export const readChapterBody = async (docId: string, chapter: ChapterEntry): Pro
 };
 
 /**
- * Write a finished document folder atomically: build in a sibling temp dir, then swap.
+ * Replaces a document folder with a freshly built one.
  *
- * @param docId
- * @param buildDir
+ * @remarks
+ * Build in a sibling temp folder, then swap: the old folder is renamed aside, the new one
+ * moved into place, and only then is the old one removed.
+ *
+ * @param docId - Document id (a lowercase slug).
+ * @param buildDir - Folder holding the finished document.
+ * @returns Resolves once the swap is complete.
+ * @throws Error when the id is invalid or a rename fails.
  */
 export const replaceDocumentDir = async (docId: string, buildDir: string): Promise<void> => {
   const target = documentDir(docId);
@@ -217,10 +300,15 @@ export const replaceDocumentDir = async (docId: string, buildDir: string): Promi
 };
 
 /**
+ * Builds the reader URL path of a chapter, optionally scrolled to an annotation.
  *
- * @param docId
- * @param chapterId
- * @param annotationId
+ * @param docId - Document id.
+ * @param chapterId - Chapter id.
+ * @param annotationId - Annotation to jump to, used as the URL fragment.
+ * @returns A path such as `/read/alice/ch-001#a-k3x9q0`.
  */
-export const chapterRoute = (docId: string, chapterId: string, annotationId?: string): string =>
-  `/read/${docId}/${chapterId}${annotationId ? `#${annotationId}` : ''}`;
+export const chapterRoute = (docId: string, chapterId: string, annotationId?: string): string => {
+  const fragment = annotationId ? `#${annotationId}` : '';
+
+  return `/read/${docId}/${chapterId}${fragment}`;
+};
