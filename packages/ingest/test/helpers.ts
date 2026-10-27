@@ -1,4 +1,4 @@
-import { existsSync } from 'node:fs';
+import { existsSync, readdirSync } from 'node:fs';
 import { mkdtemp, readFile } from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
@@ -6,13 +6,12 @@ import path from 'node:path';
 import type { Fetcher } from '../src/url';
 
 export const repo = path.resolve(import.meta.dirname, '../../..');
-import { readdirSync } from 'node:fs';
 
 export const sample = (prefix: string) =>
   path.join(
     repo,
     'samples',
-    readdirSync(path.join(repo, 'samples')).find(f => f.startsWith(prefix))!
+    readdirSync(path.join(repo, 'samples')).find(fileName => fileName.startsWith(prefix))!
   );
 
 export async function useTempLibrary(): Promise<string> {
@@ -23,8 +22,7 @@ export async function useTempLibrary(): Promise<string> {
   return dir;
 }
 
-/** Serves fixtures/images/<name>.png for any URL ending in <name>.png; everything else 404s. */
-export const fixtureFetcher: Fetcher = async url => {
+export const fixtureImageFetcherWith404Fallback: Fetcher = async url => {
   const name = new URL(url).pathname.split('/').pop() ?? '';
   const file = path.join(repo, 'fixtures/images', name);
 

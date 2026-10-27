@@ -7,7 +7,7 @@ import { documentDir } from '@study/core';
 
 import { importSource } from '../src/index';
 import { splitArticle } from '../src/url';
-import { fixtureFetcher, repo, useTempLibrary } from './helpers';
+import { fixtureImageFetcherWith404Fallback, repo, useTempLibrary } from './helpers';
 
 const fixture = (name: string) => path.join(repo, 'fixtures/html', name);
 
@@ -20,7 +20,7 @@ describe('web page import (offline fixtures)', () => {
 
   it('extracts a blog post without navigation and stores images locally', async () => {
     const { document, report } = await importSource(fixture('blog-post.html'), {
-      fetcher: fixtureFetcher,
+      fetcher: fixtureImageFetcherWith404Fallback,
     });
 
     expect(document.kind).toBe('article');
@@ -37,11 +37,14 @@ describe('web page import (offline fixtures)', () => {
     const img = /\.\.\/(assets\/[a-f0-9]+\.png)/.exec(md)?.[1];
 
     expect(img && existsSync(path.join(documentDir(document.id), img))).toBe(true);
-    expect(report.warnings.filter(w => w.code === 'missing-image')).toHaveLength(0);
+    expect(report.warnings.filter(warning => warning.code === 'missing-image')).toHaveLength(0);
   });
 
   it('keeps code blocks and tables from a docs page', async () => {
-    const { document } = await importSource(fixture('docs-page.html'), { fetcher: fixtureFetcher });
+    const { document } = await importSource(fixture('docs-page.html'), {
+      fetcher: fixtureImageFetcherWith404Fallback,
+    });
+
     const md = await chapterText(document.id, document.chapters[0].file);
 
     expect(md).toContain('max_connections = 100');
@@ -51,7 +54,7 @@ describe('web page import (offline fixtures)', () => {
 
   it('drops banners and ads from a news article', async () => {
     const { document } = await importSource(fixture('news-article.html'), {
-      fetcher: fixtureFetcher,
+      fetcher: fixtureImageFetcherWith404Fallback,
     });
 
     expect(document.title).toBe('Local Library Opens New Wing');
@@ -63,14 +66,16 @@ describe('web page import (offline fixtures)', () => {
 
   it('downloads every image of an image-heavy page and reports the missing one', async () => {
     const { document, report } = await importSource(fixture('image-heavy.html'), {
-      fetcher: fixtureFetcher,
+      fetcher: fixtureImageFetcherWith404Fallback,
     });
 
     const md = await chapterText(document.id, document.chapters[0].file);
 
     expect(md.match(/\.\.\/assets\/[a-f0-9]+\.png/g)?.length).toBeGreaterThanOrEqual(6);
     expect(
-      report.warnings.some(w => w.code === 'missing-image' && w.message.includes('missing.png'))
+      report.warnings.some(
+        warning => warning.code === 'missing-image' && warning.message.includes('missing.png')
+      )
     ).toBe(true);
   });
 
@@ -85,21 +90,21 @@ describe('web page import (offline fixtures)', () => {
             ok: true,
             status: 200,
           }
-        : fixtureFetcher(url);
+        : fixtureImageFetcherWith404Fallback(url);
 
     const { report } = await importSource('https://spa.example.com/post/1', { fetcher });
 
-    expect(report.warnings.some(w => w.code === 'fetch-fallback')).toBe(true);
+    expect(report.warnings.some(warning => warning.code === 'fetch-fallback')).toBe(true);
   });
 
   it('splits very long articles at level-2 headings', () => {
-    const section = (n: number) => `## Part ${n}\n\n${'word '.repeat(3000)}`;
+    const section = (partNumber: number) => `## Part ${partNumber}\n\n${'word '.repeat(3000)}`;
 
     const parts = splitArticle(
       'Long',
       `Intro text.\n\n${section(1)}\n\n${section(2)}\n\n${section(3)}`
     );
 
-    expect(parts.map(p => p.title)).toEqual(['Introduction', 'Part 1', 'Part 2', 'Part 3']);
+    expect(parts.map(part => part.title)).toEqual(['Introduction', 'Part 1', 'Part 2', 'Part 3']);
   });
 });

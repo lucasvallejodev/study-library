@@ -16,7 +16,7 @@ describe('Markdown import', () => {
 
     expect(document.id).toBe('notes-on-logs');
     expect(document.authors).toEqual(['Study Library Fixtures']);
-    expect(document.chapters.map(c => c.title)).toEqual([
+    expect(document.chapters.map(chapter => chapter.title)).toEqual([
       'Introduction',
       'Append-only storage',
       'Replication',

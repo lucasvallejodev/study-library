@@ -5,14 +5,18 @@ import { describe, expect, it } from 'vitest';
 
 import { isMobiEncrypted } from '../src/calibre';
 
-/** Minimal PalmDB header with one record whose MOBI header declares an encryption type. */
-async function fakeMobi(encryption: number): Promise<string> {
+const RECORD_COUNT_POSITION = 76;
+const FIRST_RECORD_OFFSET_POSITION = 78;
+const FIRST_RECORD_OFFSET = 100;
+const ENCRYPTION_TYPE_POSITION = 12;
+
+async function palmDatabaseWithOneMobiRecord(encryption: number): Promise<string> {
   const buf = Buffer.alloc(200);
 
   buf.write('BOOKMOBI', 60, 'latin1');
-  buf.writeUInt16BE(1, 76); // record count
-  buf.writeUInt32BE(100, 78); // record 0 offset
-  buf.writeUInt16BE(encryption, 100 + 12);
+  buf.writeUInt16BE(1, RECORD_COUNT_POSITION);
+  buf.writeUInt32BE(FIRST_RECORD_OFFSET, FIRST_RECORD_OFFSET_POSITION);
+  buf.writeUInt16BE(encryption, FIRST_RECORD_OFFSET + ENCRYPTION_TYPE_POSITION);
   const file = path.join(os.tmpdir(), `fake-${encryption}-${Date.now()}.mobi`);
 
   await writeFile(file, buf);
@@ -22,9 +26,9 @@ async function fakeMobi(encryption: number): Promise<string> {
 
 describe('Kindle DRM detection', () => {
   it('accepts DRM-free MOBI files', async () => {
-    expect(await isMobiEncrypted(await fakeMobi(0))).toBe(false);
+    expect(await isMobiEncrypted(await palmDatabaseWithOneMobiRecord(0))).toBe(false);
   });
   it('detects encrypted MOBI files', async () => {
-    expect(await isMobiEncrypted(await fakeMobi(2))).toBe(true);
+    expect(await isMobiEncrypted(await palmDatabaseWithOneMobiRecord(2))).toBe(true);
   });
 });

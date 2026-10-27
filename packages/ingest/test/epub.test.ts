@@ -3,7 +3,13 @@ import { readFile } from 'node:fs/promises';
 import path from 'node:path';
 import { beforeAll, describe, expect, it } from 'vitest';
 
-import { documentDir, ImportReportSchema, parseChapterFile, readDocument } from '@study/core';
+import {
+  documentDir,
+  ImportReportSchema,
+  type LibraryDocument,
+  parseChapterFile,
+  readDocument,
+} from '@study/core';
 
 import { DocumentExistsError, importSource, reimportDocument } from '../src/index';
 import { sample, useTempLibrary } from './helpers';
@@ -39,6 +45,30 @@ const books = [
   },
 ];
 
+async function expectSelfDescribingChaptersWithLocalImages(
+  document: LibraryDocument
+): Promise<number> {
+  let imageCount = 0;
+
+  for (const chapter of document.chapters) {
+    const raw = await readFile(path.join(documentDir(document.id), chapter.file), 'utf8');
+    const { body: markdown, front } = parseChapterFile(raw);
+
+    expect(front).toMatchObject({
+      document: document.id,
+      id: chapter.id,
+      order: chapter.order,
+    });
+
+    for (const match of markdown.matchAll(/(?:\]\(|src=")\.\.\/(assets\/[^)"\s]+)/g)) {
+      imageCount++;
+      expect(existsSync(path.join(documentDir(document.id), match[1])), match[1]).toBe(true);
+    }
+  }
+
+  return imageCount;
+}
+
 describe('EPUB import (Standard Ebooks samples)', () => {
   beforeAll(useTempLibrary);
 
@@ -47,7 +77,7 @@ describe('EPUB import (Standard Ebooks samples)', () => {
       const { document, report } = await importSource(sample(book.prefix));
 
       expect(document.id).toBe(book.id);
-      const body = document.chapters.filter(c => c.matter === 'body');
+      const body = document.chapters.filter(chapter => chapter.matter === 'body');
 
       expect(body).toHaveLength(book.body);
       expect(body[0].title).toBe(book.firstBody);
@@ -55,24 +85,7 @@ describe('EPUB import (Standard Ebooks samples)', () => {
       expect(existsSync(path.join(documentDir(book.id), 'import-report.json'))).toBe(true);
       expect(existsSync(path.join(documentDir(book.id), 'source/original.epub'))).toBe(true);
 
-      // Every image referenced from a chapter exists in assets/, and frontmatter is self-describing.
-      let imageCount = 0;
-
-      for (const ch of document.chapters) {
-        const raw = await readFile(path.join(documentDir(book.id), ch.file), 'utf8');
-        const { body: md, front } = parseChapterFile(raw);
-
-        expect(front).toMatchObject({
-          document: book.id,
-          id: ch.id,
-          order: ch.order,
-        });
-
-        for (const m of md.matchAll(/(?:\]\(|src=")\.\.\/(assets\/[^)"\s]+)/g)) {
-          imageCount++;
-          expect(existsSync(path.join(documentDir(book.id), m[1])), m[1]).toBe(true);
-        }
-      }
+      const imageCount = await expectSelfDescribingChaptersWithLocalImages(document);
 
       if (book.images) expect(imageCount).toBeGreaterThan(30);
       expect(document.cover && existsSync(path.join(documentDir(book.id), document.cover))).toBe(
@@ -83,7 +96,7 @@ describe('EPUB import (Standard Ebooks samples)', () => {
 
   it('turns endnote references into per-chapter footnotes', async () => {
     const doc = await readDocument('the-count-of-monte-cristo');
-    const ch = doc.chapters.find(c => c.title === 'IV: Conspiracy')!;
+    const ch = doc.chapters.find(chapter => chapter.title === 'IV: Conspiracy')!;
     const md = await readFile(path.join(documentDir(doc.id), ch.file), 'utf8');
 
     expect(md).toMatch(/\[\^1\][^:]/);
@@ -92,7 +105,7 @@ describe('EPUB import (Standard Ebooks samples)', () => {
 
   it('keeps poetry line breaks', async () => {
     const doc = await readDocument('alices-adventures-in-wonderland');
-    const ch = doc.chapters.find(c => c.title.startsWith('III:'))!;
+    const ch = doc.chapters.find(chapter => chapter.title.startsWith('III:'))!;
     const md = await readFile(path.join(documentDir(doc.id), ch.file), 'utf8');
 
     expect(md).toContain('“Fury said to\\');
@@ -103,8 +116,8 @@ describe('EPUB import (Standard Ebooks samples)', () => {
     const before = await readDocument('frankenstein');
     const { document: after } = await reimportDocument('frankenstein');
 
-    expect(after.chapters.map(c => [c.id, c.title])).toEqual(
-      before.chapters.map(c => [c.id, c.title])
+    expect(after.chapters.map(chapter => [chapter.id, chapter.title])).toEqual(
+      before.chapters.map(chapter => [chapter.id, chapter.title])
     );
   });
 });
