@@ -2,7 +2,7 @@
 
 import { useCallback } from 'react';
 
-import { cardElementId, type ChapterLink, type ElementRef, isNarrowViewport } from './reader-types';
+import { cardElementId, type ChapterLink, type ElementRef } from './reader-types';
 import { useArticleClick } from './use-article-click';
 import { useChapterKeyboard } from './use-chapter-keyboard';
 import { useDeepLink } from './use-deep-link';
@@ -29,9 +29,11 @@ export function useReaderInteractions(options: ReaderInteractionsOptions): Reade
   const { annotations, articleRef, closePopover, docId, initialPosition, next, panels, prev } =
     options;
 
-  const { anchored, editingId, focus, ordered, ranges, setEditingId } = annotations;
+  const { anchored, closeBubble, editingId, focus, openBubble, ordered, ranges, setEditingId } =
+    annotations;
+
   const { closeAll, openSheet } = panels;
-  const { pulseAnnotation, selectAnnotation, setActiveId } = focus;
+  const { pulseAnnotation, setActiveId } = focus;
 
   const revealUnplacedCard = useCallback(
     (annotationId: string) => {
@@ -45,14 +47,23 @@ export function useReaderInteractions(options: ReaderInteractionsOptions): Reade
   const closeEverything = useCallback(() => {
     closeAll();
     closePopover();
-  }, [closeAll, closePopover]);
+    closeBubble();
+  }, [closeAll, closePopover, closeBubble]);
+
+  const showLinkedPassage = useCallback(
+    (annotationId: string) => {
+      pulseAnnotation(annotationId);
+      openBubble(annotationId);
+    },
+    [openBubble, pulseAnnotation]
+  );
 
   useDeepLink({
     anchored,
     articleRef,
     initialPosition,
     onUnplacedLink: revealUnplacedCard,
-    pulseAnnotation,
+    pulseAnnotation: showLinkedPassage,
     ranges,
   });
 
@@ -65,21 +76,19 @@ export function useReaderInteractions(options: ReaderInteractionsOptions): Reade
 
   const onArticleClick = useArticleClick({
     clearSelection: () => {
-      if (!editingId) setActiveId(undefined);
+      if (editingId) return;
+      setActiveId(undefined);
+      closeBubble();
     },
-    onMarkClick: selectAnnotation,
-    onPaintedTextClick: annotationId => {
-      selectAnnotation(annotationId);
-      if (isNarrowViewport()) openSheet();
-    },
+    onMarkClick: openBubble,
+    onPaintedTextClick: openBubble,
     ordered,
     ranges,
   });
 
   function startNote(annotationId: string) {
-    setActiveId(annotationId);
     setEditingId(annotationId);
-    if (isNarrowViewport()) openSheet();
+    openBubble(annotationId);
   }
 
   return { onArticleClick, startNote };

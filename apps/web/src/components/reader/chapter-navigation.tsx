@@ -13,7 +13,7 @@ const END_CARD_CLASS = 'rounded-lg border border-line p-3 text-right hover:borde
 
 export function ChapterNavigation({ docId, next, prev }: ChapterNavigationProps) {
   return (
-    <nav className="mx-auto mt-12 grid max-w-[680px] grid-cols-2 gap-4 border-t border-line pt-6 text-sm">
+    <nav className="mt-12 grid grid-cols-2 gap-4 border-t border-line pt-6 text-sm">
       {prev ? (
         <NavigationCard href={`/read/${docId}/${prev.id}`} label="← Previous" title={prev.title} />
       ) : (

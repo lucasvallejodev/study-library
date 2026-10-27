@@ -36,12 +36,6 @@ export type RangeMap = Map<string, Range>;
 
 export type ElementRef<Element extends HTMLElement> = React.RefObject<Element | null>;
 
-export const WIDE_LAYOUT_MIN_WIDTH = 1280;
-
-export function isNarrowViewport(): boolean {
-  return window.innerWidth < WIDE_LAYOUT_MIN_WIDTH;
-}
-
 export function cardElementId(annotationId: string): string {
   return `card-${annotationId}`;
 }

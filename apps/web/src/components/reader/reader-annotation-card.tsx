@@ -3,7 +3,7 @@
 import type { Annotation } from '@study/core';
 
 import { annotationPath, studyPrompt } from '../annotations';
-import { AnnotationCard } from './annotation-card';
+import { AnnotationCard, type CardVariant } from './annotation-card';
 import type { Notify } from './use-toast';
 
 export type CardControls = {
@@ -22,8 +22,8 @@ export type CardControls = {
 
 type ReaderCardProps = {
   annotation: Annotation;
-  compact?: boolean;
   controls: CardControls;
+  variant?: CardVariant;
 };
 
 function sharedCardProps({ annotation, controls }: ReaderCardProps) {
@@ -42,7 +42,7 @@ function sharedCardProps({ annotation, controls }: ReaderCardProps) {
 }
 
 export function PlacedAnnotationCard(props: ReaderCardProps) {
-  const { annotation, compact, controls } = props;
+  const { annotation, controls, variant } = props;
 
   function onEdit(editing: boolean) {
     controls.setEditingId(editing ? annotation.id : undefined);
@@ -52,7 +52,7 @@ export function PlacedAnnotationCard(props: ReaderCardProps) {
   return (
     <AnnotationCard
       {...sharedCardProps(props)}
-      compact={compact}
+      variant={variant}
       onEdit={onEdit}
       onFocus={() => controls.pulseAnnotation(annotation.id)}
     />

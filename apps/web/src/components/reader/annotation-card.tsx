@@ -9,13 +9,19 @@ import { AnnotationApi } from './api';
 import { cardElementId } from './reader-types';
 
 const CLAUDE_TAG = 'claude';
-const EDITOR_ROWS = 4;
+
+const EditorRows: Record<CardVariant, number> = {
+  bubble: 6,
+  card: 4,
+};
+
 const FocusWithoutScrolling = { preventScroll: true };
+
+export type CardVariant = 'card' | 'bubble';
 
 type Props = {
   active: boolean;
   annotation: Annotation;
-  compact?: boolean;
   editing: boolean;
   link: string;
   notify: (message: string) => void;
@@ -24,6 +30,7 @@ type Props = {
   onEdit: (editing: boolean) => void;
   onFocus?: () => void;
   studyPrompt: string;
+  variant?: CardVariant;
 };
 
 type Draft = {
@@ -61,11 +68,11 @@ function visibleTagsOf(annotation: Annotation): string[] {
     : annotation.tags;
 }
 
-function cardClass(active: boolean, compact?: boolean): string {
+function cardClass(active: boolean, variant: CardVariant): string {
+  if (variant === 'bubble') return 'py-3 text-base leading-relaxed';
   const state = active ? 'border-accent bg-panel shadow-md' : 'border-line bg-paper';
-  const shift = compact && active ? '-translate-x-2' : '';
 
-  return `rounded-lg border p-3 text-sm transition ${state} ${shift}`;
+  return `rounded-lg border p-3 text-sm transition ${state}`;
 }
 
 function useDraftSyncedWith(annotation: DraftSource) {
@@ -81,7 +88,7 @@ function useDraftSyncedWith(annotation: DraftSource) {
 }
 
 export function AnnotationCard(props: Props) {
-  const { active, annotation, compact, editing, onChange, onEdit } = props;
+  const { active, annotation, editing, onChange, onEdit, variant = 'card' } = props;
   const [draft, setDraft] = useDraftSyncedWith(annotation);
   const quote = quoteOf(annotation);
 
@@ -96,18 +103,18 @@ export function AnnotationCard(props: Props) {
   }
 
   return (
-    <div id={cardElementId(annotation.id)} className={cardClass(active, compact)}>
-      <CardLabel annotation={annotation} />
-      {quote && (
-        <CardQuote
-          quote={quote}
-          swatch={swatchOf(annotation)}
-          compact={compact}
-          onFocus={props.onFocus}
-        />
+    <div id={cardElementId(annotation.id)} className={cardClass(active, variant)}>
+      {variant === 'bubble' ? (
+        <BubbleLabel annotation={annotation} />
+      ) : (
+        <CardLabel annotation={annotation} />
+      )}
+      {quote && variant === 'card' && (
+        <CardQuote quote={quote} swatch={swatchOf(annotation)} onFocus={props.onFocus} />
       )}
       {editing ? (
         <NoteEditor
+          rows={EditorRows[variant]}
           draft={draft}
           onDraftChange={setDraft}
           onSave={save}
@@ -123,6 +130,23 @@ export function AnnotationCard(props: Props) {
   );
 }
 
+function authorLabelOf(annotation: Annotation): string {
+  if (annotation.type === 'ai_question') return 'Claude asked';
+  if (isByClaude(annotation)) return 'Claude’s note';
+  if (annotation.body) return 'Your note';
+
+  return 'Highlight';
+}
+
+function BubbleLabel({ annotation }: { annotation: Annotation }) {
+  return (
+    <div className="mb-1 flex items-center gap-2 font-sans text-xs font-semibold uppercase tracking-wider text-muted">
+      <span className={`swatch-${swatchOf(annotation)} size-2.5 rounded-full`} />
+      {authorLabelOf(annotation)}
+    </div>
+  );
+}
+
 function CardLabel({ annotation }: { annotation: Annotation }) {
   if (annotation.type !== 'ai_question' && !isByClaude(annotation)) return null;
 
@@ -134,19 +158,16 @@ function CardLabel({ annotation }: { annotation: Annotation }) {
 }
 
 type CardQuoteProps = {
-  compact?: boolean;
   onFocus?: () => void;
   quote: string;
   swatch: string;
 };
 
-function CardQuote({ compact, onFocus, quote, swatch }: CardQuoteProps) {
-  const clamp = compact ? 'line-clamp-1 text-muted' : 'line-clamp-4';
-
+function CardQuote({ onFocus, quote, swatch }: CardQuoteProps) {
   return (
     <button onClick={onFocus} className="flex w-full gap-2 text-left">
       <span className={`swatch-${swatch} mt-1 w-1 shrink-0 self-stretch rounded-full`} />
-      <span className={`${clamp} font-serif text-[0.95rem] leading-snug`}>{quote}</span>
+      <span className="line-clamp-4 font-serif text-[0.95rem] leading-snug">{quote}</span>
     </button>
   );
 }
@@ -156,6 +177,7 @@ type NoteEditorProps = {
   onCancel: () => void;
   onDraftChange: (draft: Draft) => void;
   onSave: () => Promise<void>;
+  rows: number;
 };
 
 function useFocusedWithoutScrolling() {
@@ -172,7 +194,7 @@ function isSaveShortcut(event: React.KeyboardEvent): boolean {
   return event.key === 'Enter' && (event.metaKey || event.ctrlKey);
 }
 
-function NoteEditor({ draft, onCancel, onDraftChange, onSave }: NoteEditorProps) {
+function NoteEditor({ draft, onCancel, onDraftChange, onSave, rows }: NoteEditorProps) {
   const editorRef = useFocusedWithoutScrolling();
 
   function onKeyDown(event: React.KeyboardEvent) {
@@ -187,7 +209,7 @@ function NoteEditor({ draft, onCancel, onDraftChange, onSave }: NoteEditorProps)
         value={draft.body}
         onChange={event => onDraftChange({ ...draft, body: event.target.value })}
         onKeyDown={onKeyDown}
-        rows={EDITOR_ROWS}
+        rows={rows}
         placeholder="Write a note (Markdown)… ⌘↵ to save"
         className="w-full rounded border border-line bg-paper p-2 outline-none focus:border-accent"
       />

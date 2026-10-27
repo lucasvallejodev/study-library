@@ -21,11 +21,14 @@ type ReaderAnnotationsOptions = {
 };
 
 export type ReaderAnnotations = AnchoredAnnotations & {
+  bubbleId?: string;
   chapterNotes: Annotation[];
+  closeBubble: () => void;
   controls: CardControls;
   editingId?: string;
   focus: AnnotationFocus;
   list: AnnotationList;
+  openBubble: (id: string) => void;
   orphans: Annotation[];
   setEditingId: (id: string | undefined) => void;
   setHoverId: (id: string | undefined) => void;
@@ -50,8 +53,14 @@ export function useReaderAnnotations(options: ReaderAnnotationsOptions): ReaderA
   const focus = useAnnotationFocus(anchoring.ranges);
   const [editingId, setEditingId] = useState<string>();
   const [hoverId, setHoverId] = useState<string>();
+  const [bubbleId, setBubbleId] = useState<string>();
 
-  usePaintedHighlights(list.annotations, anchoring.ranges, hoverId ?? focus.activeId);
+  usePaintedHighlights(list.annotations, anchoring.ranges, hoverId ?? bubbleId ?? focus.activeId);
+
+  function closeBubble() {
+    setBubbleId(undefined);
+    setEditingId(undefined);
+  }
 
   const controls: CardControls = {
     activeId: focus.activeId,
@@ -69,11 +78,14 @@ export function useReaderAnnotations(options: ReaderAnnotationsOptions): ReaderA
 
   return {
     ...anchoring,
+    bubbleId,
     chapterNotes: chapterNotesOf(list.annotations),
+    closeBubble,
     controls,
     editingId,
     focus,
     list,
+    openBubble: setBubbleId,
     orphans: orphansOf(list.annotations, anchoring.ranges),
     setEditingId,
     setHoverId,

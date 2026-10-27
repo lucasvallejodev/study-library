@@ -10,6 +10,7 @@ type ReaderToolbarProps = {
   chapterTitle: string;
   doc: ReaderDocument;
   noteCount: number;
+  onCopyClaudeNotesPrompt: () => Promise<void>;
   onOpenToc: () => void;
   onToggleBookmark: () => Promise<void>;
   onToggleSheet: () => void;
@@ -57,8 +58,15 @@ export function ReaderToolbar(props: ReaderToolbarProps) {
           {bookmarked ? '★' : '☆'}
         </button>
         <button
+          onClick={props.onCopyClaudeNotesPrompt}
+          className="hidden shrink-0 whitespace-nowrap rounded px-2 py-1 text-muted hover:bg-panel hover:text-ink sm:block"
+          title="Copy a Claude Code prompt that writes notes on this chapter's highlights"
+        >
+          ✦ Claude notes
+        </button>
+        <button
           onClick={props.onToggleSheet}
-          className="shrink-0 whitespace-nowrap rounded px-2 py-1 hover:bg-panel xl:hidden"
+          className="shrink-0 whitespace-nowrap rounded px-2 py-1 hover:bg-panel"
         >
           Notes{noteCount > 0 && ` (${noteCount})`}
         </button>

@@ -45,7 +45,7 @@ export function ChapterNotes(props: Props) {
   }
 
   return (
-    <section className="mx-auto mt-16 max-w-[680px] border-t border-line pt-6">
+    <section className="mt-16 border-t border-line pt-6">
       <h2 className="mb-3 text-xs font-semibold uppercase tracking-wider text-muted">
         Chapter notes
       </h2>

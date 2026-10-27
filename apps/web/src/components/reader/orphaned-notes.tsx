@@ -15,7 +15,7 @@ export function OrphanedNotesSection({ controls, orphans }: OrphanedNotesProps) 
   if (orphans.length === 0) return null;
 
   return (
-    <section className="mx-auto mt-12 hidden max-w-[680px] xl:block">
+    <section className="mt-12">
       <h2 className="mb-1 text-xs font-semibold uppercase tracking-wider text-muted">
         Orphaned notes ({orphans.length})
       </h2>

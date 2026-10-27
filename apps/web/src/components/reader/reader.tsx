@@ -1,12 +1,14 @@
 'use client';
 
-import { useRef } from 'react';
+import { useRef, useState } from 'react';
 
-import { annotationPath } from '../annotations';
+import { annotationPath, copyText } from '../annotations';
 import { ArticleRenderedOnce } from './article';
 import { ChapterNavigation } from './chapter-navigation';
 import { ChapterNotes } from './chapter-notes';
-import { MarginNotes } from './margin-notes';
+import { ImageLightbox, zoomableImageOf, type ZoomedImage } from './image-lightbox';
+import { NoteBubble } from './note-bubble';
+import { NoteMarkers } from './note-markers';
 import { NotesSheet } from './notes-sheet';
 import { OrphanedNotesSection } from './orphaned-notes';
 import { ReaderToolbar, ReadingProgressBar } from './reader-toolbar';
@@ -39,6 +41,8 @@ export function Reader(props: ReaderProps) {
   const panels = useReaderPanels();
   const { closePopover, popover } = useSelectionPopover(articleRef, wrapperRef);
 
+  const zoom = useImageZoom();
+
   const { onArticleClick, startNote } = useReaderInteractions({
     annotations,
     articleRef,
@@ -59,23 +63,14 @@ export function Reader(props: ReaderProps) {
         notify={flash}
         panels={panels}
       />
-      <div className="mx-auto grid max-w-6xl gap-10 px-4 xl:grid-cols-[minmax(0,1fr)_680px_minmax(300px,1fr)]">
-        <div className="hidden xl:block" />
-        <ReaderMainColumn
-          {...props}
-          annotations={annotations}
-          articleRef={articleRef}
-          notify={flash}
-          onArticleClick={onArticleClick}
-        />
-        <MarginNotes
-          articleRef={articleRef}
-          controls={annotations.controls}
-          onHover={annotations.setHoverId}
-          ordered={annotations.ordered}
-          ranges={annotations.ranges}
-        />
-      </div>
+      <ReaderMainColumn
+        {...props}
+        annotations={annotations}
+        articleRef={articleRef}
+        notify={flash}
+        onArticleClick={event => zoom.zoomOrElse(event, onArticleClick)}
+      />
+      <PassageNotes annotations={annotations} articleRef={articleRef} wrapperRef={wrapperRef} />
       <NotesSheet
         controls={annotations.controls}
         onClose={panels.closeSheet}
@@ -102,8 +97,63 @@ export function Reader(props: ReaderProps) {
         currentId={chapter.id}
         items={props.toc}
       />
+      <ImageLightbox image={zoom.image} onClose={zoom.close} />
       {toast && <Toast message={toast} />}
     </div>
+  );
+}
+
+type ImageZoom = {
+  close: () => void;
+  image?: ZoomedImage;
+  zoomOrElse: (event: React.MouseEvent, onOtherClick: (event: React.MouseEvent) => void) => void;
+};
+
+function useImageZoom(): ImageZoom {
+  const [image, setImage] = useState<ZoomedImage>();
+
+  function zoomOrElse(event: React.MouseEvent, onOtherClick: (event: React.MouseEvent) => void) {
+    const clicked = zoomableImageOf(event.target);
+
+    if (clicked) setImage(clicked);
+    else onOtherClick(event);
+  }
+
+  return {
+    close: () => setImage(undefined),
+    image,
+    zoomOrElse,
+  };
+}
+
+type PassageNotesProps = {
+  annotations: ReaderAnnotations;
+  articleRef: ElementRef<HTMLElement>;
+  wrapperRef: ElementRef<HTMLDivElement>;
+};
+
+function PassageNotes({ annotations, articleRef, wrapperRef }: PassageNotesProps) {
+  const { ordered, ranges } = annotations;
+
+  return (
+    <>
+      <NoteMarkers
+        articleRef={articleRef}
+        onOpen={annotations.openBubble}
+        ordered={ordered}
+        ranges={ranges}
+        wrapperRef={wrapperRef}
+      />
+      <NoteBubble
+        annotationId={annotations.bubbleId}
+        articleRef={articleRef}
+        controls={annotations.controls}
+        onClose={annotations.closeBubble}
+        ordered={ordered}
+        ranges={ranges}
+        wrapperRef={wrapperRef}
+      />
+    </>
   );
 }
 
@@ -129,6 +179,11 @@ function ReaderHeader(props: ReaderSectionProps & { panels: ReaderPanels }) {
     notify,
   });
 
+  async function copyClaudeNotesPrompt() {
+    await copyText(`/highlight-notes ${doc.id} ${chapter.id}`);
+    notify('Prompt copied — paste it into Claude Code');
+  }
+
   return (
     <>
       <ReadingProgressBar progress={progress} />
@@ -138,6 +193,7 @@ function ReaderHeader(props: ReaderSectionProps & { panels: ReaderPanels }) {
         doc={doc}
         noteCount={annotations.ordered.length + annotations.orphans.length}
         onOpenToc={panels.openToc}
+        onCopyClaudeNotesPrompt={copyClaudeNotesPrompt}
         onToggleBookmark={toggleBookmark}
         onToggleSheet={panels.toggleSheet}
         progress={progress}
@@ -152,9 +208,9 @@ function ReaderMainColumn(
   const { annotations, articleRef, chapter, doc } = props;
 
   return (
-    <main className="min-w-0 py-10">
+    <main className="mx-auto min-w-0 max-w-[900px] px-4 py-10">
       <SourceLink url={chapter.sourceUrl} />
-      <div onClick={props.onArticleClick} className="mx-auto max-w-[680px]">
+      <div onClick={props.onArticleClick}>
         <ArticleRenderedOnce html={props.html} articleRef={articleRef} />
       </div>
       <OrphanedNotesSection controls={annotations.controls} orphans={annotations.orphans} />

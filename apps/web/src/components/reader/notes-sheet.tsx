@@ -17,10 +17,10 @@ export function NotesSheet({ controls, onClose, open, ordered, orphans }: NotesS
   if (!open) return null;
 
   return (
-    <div className="fixed inset-0 z-40 xl:hidden" onClick={onClose}>
+    <div className="fixed inset-0 z-40" onClick={onClose}>
       <div className="absolute inset-0 bg-black/30" />
       <div
-        className="absolute inset-x-0 bottom-0 max-h-[70vh] overflow-y-auto rounded-t-2xl border-t border-line bg-paper p-4 shadow-2xl"
+        className="absolute inset-x-0 bottom-0 mx-auto max-h-[70vh] max-w-3xl overflow-y-auto rounded-t-2xl border-t border-line bg-paper p-4 shadow-2xl"
         onClick={event => event.stopPropagation()}
       >
         <div className="mb-3 flex items-center justify-between">

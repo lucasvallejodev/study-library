@@ -47,6 +47,7 @@ body {
   --tw-prose-td-borders: var(--color-line);
   --tw-prose-bullets: var(--color-muted);
   --tw-prose-counters: var(--color-muted);
+  --reader-figure-width: 1100px;
   font-family: var(--font-serif);
   font-size: 1.2rem;
   line-height: 1.7;
@@ -69,13 +70,27 @@ body {
 .reader-prose figure {
   text-align: center;
 }
+
+/* Figures, diagrams and standalone images may extend past the text column, up to the reading
+   area's figure width, so technical diagrams stay legible. */
+.reader-prose figure,
+.reader-prose p:has(> img:only-child) {
+  margin-inline: calc((min(var(--reader-figure-width), 100vw - 2rem) - 100%) / -2);
+}
+.reader-prose figure img,
+.reader-prose p:has(> img:only-child) img {
+  cursor: zoom-in;
+  max-width: 100%;
+}
 .reader-prose pre {
   font-size: 0.85em;
   line-height: 1.55;
 }
 .reader-prose table {
+  display: block;
   font-family: var(--font-sans);
   font-size: 0.85em;
+  overflow-x: auto;
 }
 .reader-prose .footnotes {
   font-size: 0.9em;
