@@ -15,7 +15,7 @@ packages/core/       THE CONTRACT: Zod schemas (document.json, frontmatter, anno
 packages/ingest/     Importers: epub-*.ts (EPUB), calibre.ts (MOBI/AZW), url.ts (Defuddle), markdown.ts, writer.ts
 packages/anchoring/  W3C TextQuote/TextPosition selectors, fuzzy re-anchoring, DOM range helpers
 packages/cli/        `lib` command; talks ONLY to the web app's HTTP API (LIB_API_URL)
-.claude/skills/      Claude Code skills (import-source, study, review, study-notes, highlight-notes, pdf-to-library, verify-mvp)
+.claude/skills/      Study skills as plain SKILL.md files, usable by any agent (see "Skills" below)
 _agents/             Docs for agents: product plan, architecture, contracts, runbooks, decisions, conventions
 fixtures/            Offline test inputs (saved HTML pages, images, Markdown)
 library/             Real content (git-ignored, one folder per document)
@@ -39,6 +39,32 @@ docker compose up -d --build # full deploy: app + db + nightly backup
 ```
 
 System tools: `pandoc` (required for EPUB import) and `ebook-convert` from Calibre (MOBI/AZW only). The Docker image bundles both.
+
+## Skills (for any agent)
+
+Each skill is a Markdown playbook in `.claude/skills/<name>/SKILL.md`. Claude Code runs them as `/<name>`; other agents: when the user asks for one of these by name or by intent, read that file and follow it. All of them share `_agents/conventions/skills.md` (how to pick a chapter or highlight, ask at most three questions, look at the chapter's images with `lib assets`, cite honestly and save results).
+
+| Skill               | Use it to                                                                       |
+| ------------------- | ------------------------------------------------------------------------------- |
+| `ask`               | Answer questions about a chapter or highlight, with follow-up questions         |
+| `further-reading`   | Find and check videos, articles, docs and papers to go deeper                   |
+| `study-notes`       | Summaries (TL;DR, one page, by section, your highlights), key ideas, glossaries |
+| `visualize`         | Diagrams (Mermaid), worked examples, analogies and code to digest a passage     |
+| `primer`            | Prepare for a chapter before reading it, without spoilers                       |
+| `study`             | Quiz on a chapter, one question at a time                                       |
+| `teach-back`        | Explain a concept in your own words and get the gaps pointed out                |
+| `exercises`         | Hands-on practice for technical chapters, with tests in `_temp/exercises/`      |
+| `critique`          | Steelman a claim, then objections, limits and what survives                     |
+| `connect`           | Link a chapter or highlight to the rest of the library                          |
+| `highlight-notes`   | Write Claude's notes beside the user's highlights                               |
+| `chapter-synthesis` | Wrap up a finished chapter from the user's own highlights, notes and results    |
+| `flashcards`        | Export cards to Anki (TSV) and optionally to the review queue                   |
+| `review`            | Mixed review of recent highlights and missed questions                          |
+| `import-source`     | Import a book, URL or Markdown file and fix the import report                   |
+| `pdf-to-library`    | Turn a PDF or any readable document into a library document                     |
+| `verify-mvp`        | End-to-end check of the app after code changes                                  |
+
+The reader's **Copy for AI** buttons (chapter toolbar and each note) copy a self-contained prompt for assistants that cannot run the CLI.
 
 ## Rules for agents
 

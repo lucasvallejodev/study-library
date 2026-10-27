@@ -45,14 +45,17 @@ Three services: `app` (Next.js + Calibre + Pandoc), `db` (Postgres 18), `backup`
 | `/search`               | Full-text search over every chapter and every note                                            |
 | `/import`               | Upload or paste a URL; live job log and import report                                         |
 
-## Studying with Claude Code
+## Studying with Claude Code (or another agent)
 
 Open this folder in Claude Code (the server must be running; from another machine set `LIB_API_URL=http://homeserver:3000` in `.env`):
 
 - `/study <doc> <chapter>` — 5–8 questions, one at a time, from recall to application, using your highlights. The session and any "review later" questions are saved; the questions appear in the reader's margin.
 - `/review 7` — mixed review of the last week's highlights and missed answers.
-- "Make study notes for chapter 3" (`study-notes`), "Import this PDF" (`pdf-to-library`), "Import this URL and clean it up" (`import-source`).
-- The **Ask Claude** button in the reader copies a ready `/study … --focus <highlight>` prompt.
+- `/ask <doc> <chapter|highlight>` — ask questions; answers use the text and its diagrams, and suggest what to ask next.
+- `/further-reading`, `/visualize`, `/primer`, `/teach-back`, `/exercises`, `/critique`, `/connect`, `/chapter-synthesis`, `/flashcards` — find resources, draw diagrams and examples, prepare for a chapter, explain it back, practice, question the argument, link it to your other books, wrap up a chapter, export cards to Anki.
+- "Summarize chapter 3 as a TL;DR" (`study-notes`), "Import this PDF" (`pdf-to-library`), "Import this URL and clean it up" (`import-source`).
+- Each skill accepts a chapter or a highlight (its id or deep link) and asks at most three quick questions first. The full list is in `AGENTS.md`; other AI agents can follow the same `SKILL.md` files.
+- The **Ask Claude** button in the reader copies a ready `/study … --focus <highlight>` prompt; **Copy for AI** copies the chapter or passage as a prompt for any assistant (ChatGPT, Gemini…). Notes draw Mermaid diagrams.
 
 CLI reference: `pnpm -s lib --help` or `_agents/contracts/cli.md`.
 
