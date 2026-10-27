@@ -11,7 +11,7 @@ const ExportDeclarationTypes = new Set(['ExportDefaultDeclaration', 'ExportNamed
 const isDocComment = comment => comment.type === 'Block' && comment.value.startsWith('*');
 
 const isToolDirective = comment =>
-  AllowedCommentPatterns.some(pattern => pattern.test(comment.value));
+  comment.type === 'Shebang' || AllowedCommentPatterns.some(pattern => pattern.test(comment.value));
 
 /**
  * Start offsets of the doc comments that sit directly above a top-level export, so they

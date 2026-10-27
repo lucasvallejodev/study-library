@@ -9,3 +9,4 @@ samples
 fixtures
 backups
 packages/core/drizzle
+**/next-env.d.ts
