@@ -39,3 +39,11 @@ The text column is up to 900px wide; figures and standalone images may extend to
 - Positions re-measure on resize and when the article changes size (`use-layout-tick.ts`).
 
 TOC is a left drawer. Keyboard: ← / → previous/next chapter, Esc closes panels.
+
+## Notes: Markdown and tags
+
+`components/notes/` holds the note UI shared by the bubble, the Notes list, chapter notes and the notebook:
+
+- `markdown-view.tsx` renders note bodies with `react-markdown` + GFM (no raw HTML), styled by `.note-prose` in `globals.css`; links open in a new tab. Usable from server and client components.
+- `markdown-editor.tsx` is a textarea with a formatting toolbar (bold, italic, strikethrough, code, link, heading, quote, lists, checklist, code block), shortcuts ⌘B / ⌘I / ⌘E / ⌘K, ⌘↵ to save, Esc to cancel, a Write/Preview switch and auto-grow. The text transforms are pure functions in `markdown-formatting.ts` (tested).
+- `tag-input.tsx` shows tags as chips and suggests existing tags from `GET /api/tags` (`use-known-tags.ts`, cached per page load and refreshed after a save). Enter, Tab or comma adds the highlighted suggestion or the typed tag (spaces become dashes); Backspace on an empty field removes the last tag; ↑/↓ move through suggestions.
