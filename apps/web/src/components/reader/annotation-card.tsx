@@ -5,6 +5,8 @@ import { useState } from 'react';
 import type { Annotation, HighlightColor } from '@study/core';
 
 import { copyText, HighlightColors, quoteOf, tagHref } from '../annotations';
+import { DeleteAnnotationConfirmation } from '../dialogs/confirmations';
+import { useDialogs } from '../dialogs/dialog-provider';
 import { type MarkdownSize, MarkdownView } from '../notes/markdown-view';
 import { NoteTextEditor } from '../notes/note-text-editor';
 import { TagInput } from '../notes/tag-input';
@@ -243,6 +245,8 @@ function CardActions({
   onEdit,
   studyPrompt,
 }: CardActionsProps) {
+  const dialogs = useDialogs();
+
   async function recolor(color: HighlightColor) {
     onChange(await AnnotationApi.update(annotation.id, { color }));
   }
@@ -258,7 +262,7 @@ function CardActions({
   }
 
   async function remove() {
-    if (!confirm('Delete this annotation?')) return;
+    if (!(await dialogs.confirm(DeleteAnnotationConfirmation))) return;
     await AnnotationApi.remove(annotation.id);
     onDelete();
   }

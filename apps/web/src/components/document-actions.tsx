@@ -2,18 +2,18 @@
 
 import { useState } from 'react';
 
+import { ReimportConfirmation } from '@/components/dialogs/confirmations';
+import { useDialogs } from '@/components/dialogs/dialog-provider';
 import { errorMessageOf } from '@/components/http';
-
-const REIMPORT_CONFIRMATION =
-  'Re-import from the saved source? Chapter ids are kept when titles match.';
 
 const LINK_CLASS = 'block text-accent hover:underline';
 
 export function DocumentActions({ docId }: { docId: string }) {
   const [message, setMessage] = useState<string>();
+  const dialogs = useDialogs();
 
   async function reimport() {
-    if (!confirm(REIMPORT_CONFIRMATION)) return;
+    if (!(await dialogs.confirm(ReimportConfirmation))) return;
 
     const response = await fetch(`/api/documents/${docId}/reimport`, { method: 'POST' });
 

@@ -4,6 +4,7 @@ import './globals.css';
 import type { Metadata } from 'next';
 import Script from 'next/script';
 
+import { DialogProvider } from '@/components/dialogs/dialog-provider';
 import { SiteHeader } from '@/components/site-header';
 
 export const metadata: Metadata = {
@@ -23,7 +24,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       </head>
       <body className="min-h-screen font-sans antialiased">
         <SiteHeader />
-        {children}
+        <DialogProvider>{children}</DialogProvider>
       </body>
     </html>
   );

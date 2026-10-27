@@ -6,6 +6,8 @@ import { useState } from 'react';
 import { copyText } from '@/components/annotations';
 import { postJson } from '@/components/http';
 
+import { DeleteAnnotationConfirmation } from './dialogs/confirmations';
+import { useDialogs } from './dialogs/dialog-provider';
 import { NoteTextEditor } from './notes/note-text-editor';
 
 type ExportedDocument = {
@@ -93,6 +95,7 @@ function ExportAll() {
 
 export function NotebookItemActions({ href, id }: { href?: string; id: string }) {
   const router = useRouter();
+  const dialogs = useDialogs();
   const [copied, setCopied] = useState(false);
 
   async function copyLink(path: string) {
@@ -102,7 +105,7 @@ export function NotebookItemActions({ href, id }: { href?: string; id: string })
   }
 
   async function remove() {
-    if (!confirm('Delete this annotation?')) return;
+    if (!(await dialogs.confirm(DeleteAnnotationConfirmation))) return;
     await fetch(`/api/annotations/${id}`, { method: 'DELETE' });
     router.refresh();
   }

@@ -16,8 +16,14 @@ function isTypingInField(target: EventTarget | null): boolean {
   return target instanceof Element && Boolean(target.closest('input, textarea, [contenteditable]'));
 }
 
+function isModalOpen(): boolean {
+  return document.querySelector('dialog[open]') !== null;
+}
+
 function isTypingOrShortcut(event: KeyboardEvent): boolean {
-  return isTypingInField(event.target) || event.metaKey || event.ctrlKey || event.altKey;
+  return (
+    isModalOpen() || isTypingInField(event.target) || event.metaKey || event.ctrlKey || event.altKey
+  );
 }
 
 export function useChapterKeyboard({ docId, next, onEscape, prev }: ChapterKeyboardOptions) {

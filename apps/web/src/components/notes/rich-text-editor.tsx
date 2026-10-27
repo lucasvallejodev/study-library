@@ -6,8 +6,10 @@ import { Markdown } from '@tiptap/markdown';
 import { TextSelection } from '@tiptap/pm/state';
 import { type Editor, EditorContent, useEditor, useEditorState } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
-import { useEffect, useLayoutEffect, useRef } from 'react';
+import { useCallback, useEffect, useLayoutEffect, useRef } from 'react';
 
+import { linkPrompt } from '../dialogs/confirmations';
+import { useDialogs } from '../dialogs/dialog-provider';
 import type { MarkdownSize } from './markdown-view';
 
 type RichTextEditorProps = {
@@ -20,7 +22,9 @@ type RichTextEditorProps = {
   value: string;
 };
 
-type Chain = ReturnType<Editor['chain']>;
+type EditorTools = {
+  editLink: (editor: Editor) => Promise<void>;
+};
 
 type EditorCallbacks = Pick<RichTextEditorProps, 'onCancel' | 'onChange' | 'onSubmit'>;
 
@@ -28,7 +32,7 @@ type RichToolbarAction = {
   className?: string;
   isActive?: (editor: Editor) => boolean;
   label: string;
-  run: (chain: Chain, editor: Editor) => Chain;
+  run: (editor: Editor, tools: EditorTools) => void;
   title: string;
 };
 
@@ -51,88 +55,78 @@ const EditorSizeClassNames: Record<MarkdownSize, string> = {
   sm: 'prose-sm',
 };
 
-function askForLink(chain: Chain, editor: Editor): Chain {
-  const current = editor.getAttributes('link').href as string | undefined;
-  const href = window.prompt('Link address', current ?? 'https://');
-
-  if (href === null) return chain;
-  if (!href.trim()) return chain.extendMarkRange('link').unsetLink();
-
-  return chain.extendMarkRange('link').setLink({ href: href.trim() });
-}
-
 const RichToolbarActions: RichToolbarAction[] = [
   // keep order
   {
     className: 'font-bold',
     isActive: editor => editor.isActive('bold'),
     label: 'B',
-    run: chain => chain.toggleBold(),
+    run: editor => editor.chain().focus().toggleBold().run(),
     title: 'Bold (⌘B)',
   },
   {
     className: 'italic',
     isActive: editor => editor.isActive('italic'),
     label: 'I',
-    run: chain => chain.toggleItalic(),
+    run: editor => editor.chain().focus().toggleItalic().run(),
     title: 'Italic (⌘I)',
   },
   {
     className: 'line-through',
     isActive: editor => editor.isActive('strike'),
     label: 'S',
-    run: chain => chain.toggleStrike(),
+    run: editor => editor.chain().focus().toggleStrike().run(),
     title: 'Strikethrough (⌘⇧S)',
   },
   {
     className: 'font-mono',
     isActive: editor => editor.isActive('code'),
     label: '</>',
-    run: chain => chain.toggleCode(),
+    run: editor => editor.chain().focus().toggleCode().run(),
     title: 'Inline code (⌘E)',
   },
   {
     isActive: editor => editor.isActive('link'),
     label: 'Link',
-    run: askForLink,
+    run: (editor, tools) => void tools.editLink(editor),
     title: 'Link (⌘K)',
   },
   {
     className: 'font-semibold',
     isActive: editor => editor.isActive('heading'),
     label: 'H',
-    run: chain => chain.toggleHeading(SectionHeading),
+    run: editor => editor.chain().focus().toggleHeading(SectionHeading).run(),
     title: 'Heading',
   },
   {
     isActive: editor => editor.isActive('blockquote'),
     label: '❝',
-    run: chain => chain.toggleBlockquote(),
+    run: editor => editor.chain().focus().toggleBlockquote().run(),
     title: 'Quote',
   },
   {
     isActive: editor => editor.isActive('bulletList'),
     label: '•',
-    run: chain => chain.toggleBulletList(),
+    run: editor => editor.chain().focus().toggleBulletList().run(),
     title: 'Bulleted list',
   },
   {
     isActive: editor => editor.isActive('orderedList'),
     label: '1.',
-    run: chain => chain.toggleOrderedList(),
+    run: editor => editor.chain().focus().toggleOrderedList().run(),
     title: 'Numbered list',
   },
   {
     isActive: editor => editor.isActive('taskList'),
     label: '☐',
-    run: chain => chain.toggleTaskList(),
+    run: editor => editor.chain().focus().toggleTaskList().run(),
     title: 'Checklist',
   },
   {
     className: 'font-mono',
     isActive: editor => editor.isActive('codeBlock'),
     label: '{ }',
-    run: chain => chain.toggleCodeBlock(),
+    run: editor => editor.chain().focus().toggleCodeBlock().run(),
     title: 'Code block',
   },
 ];
@@ -203,7 +197,31 @@ function useNoteEditor(props: RichTextEditorProps): Editor | null {
   });
 }
 
-function useLinkShortcut(editor: Editor | null) {
+function useLinkEditing(): EditorTools['editLink'] {
+  const dialogs = useDialogs();
+
+  return useCallback(
+    async (editor: Editor) => {
+      const current = editor.getAttributes('link').href as string | undefined;
+      const href = await dialogs.prompt(linkPrompt(current));
+      const chain = editor.chain().focus();
+
+      if (href === null) {
+        chain.run();
+
+        return;
+      }
+
+      const link = chain.extendMarkRange('link');
+
+      if (href.trim()) link.setLink({ href: href.trim() }).run();
+      else link.unsetLink().run();
+    },
+    [dialogs]
+  );
+}
+
+function useLinkShortcut(editor: Editor | null, editLink: EditorTools['editLink']) {
   useEffect(() => {
     if (!editor) return;
     const dom = editor.view.dom;
@@ -211,29 +229,31 @@ function useLinkShortcut(editor: Editor | null) {
     const onKeyDown = (event: KeyboardEvent) => {
       if (!isModifierKey(event) || event.key.toLowerCase() !== 'k') return;
       event.preventDefault();
-      askForLink(editor.chain().focus(), editor).run();
+      void editLink(editor);
     };
 
     dom.addEventListener('keydown', onKeyDown);
 
     return () => dom.removeEventListener('keydown', onKeyDown);
-  }, [editor]);
+  }, [editor, editLink]);
 }
 
 export function RichTextEditor(props: RichTextEditorProps) {
   const editor = useNoteEditor(props);
 
-  useLinkShortcut(editor);
+  const editLink = useLinkEditing();
+
+  useLinkShortcut(editor, editLink);
 
   return (
     <>
-      {editor && <RichToolbar editor={editor} />}
+      {editor && <RichToolbar editor={editor} tools={{ editLink }} />}
       <EditorContent editor={editor} />
     </>
   );
 }
 
-function RichToolbar({ editor }: { editor: Editor }) {
+function RichToolbar({ editor, tools }: { editor: Editor; tools: EditorTools }) {
   const active = useEditorState({
     editor,
     selector: ({ editor: current }) =>
@@ -250,7 +270,7 @@ function RichToolbar({ editor }: { editor: Editor }) {
           aria-label={action.title}
           aria-pressed={active[index]}
           onMouseDown={event => event.preventDefault()}
-          onClick={() => action.run(editor.chain().focus(), editor).run()}
+          onClick={() => action.run(editor, tools)}
           className={`min-w-7 rounded px-1.5 py-0.5 hover:bg-paper hover:text-ink ${active[index] ? 'bg-paper text-ink' : 'text-muted'} ${action.className ?? ''}`}
         >
           {action.label}
