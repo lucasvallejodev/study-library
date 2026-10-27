@@ -28,13 +28,14 @@ CSS Custom Highlight API (`CSS.highlights`): one `Highlight` per color plus `hl-
 
 `#a-xxxxxx` scrolls the range to a third of the viewport and pulses it (2.5 s); orphans open the notes sheet instead. Scroll position (0–1 through the article) is POSTed to `/api/progress` debounced, plus a `sendBeacon` on hide; `percent` only moves forward, `position` follows the reader and is restored on the next visit.
 
-## Layout: Google Docs-style margin
+## Layout: wide column and note bubbles
 
-≥1280px: three columns (spacer | 680px article | margin ≥300px). Each margin card is absolutely positioned beside its passage: `use-margin-layout.ts` measures every range's top and every card's height, pins the selected/edited card exactly beside its passage, and pushes the others down (below it) or up (above it) so nothing overlaps. It re-runs on resize and when the article changes size (lazy images, via `ResizeObserver`).
+The text column is up to 900px wide; figures and standalone images may extend to 1,100px (`--reader-figure-width` in `globals.css`), tables scroll sideways, and clicking an image opens it scaled to the screen (`image-lightbox.tsx`). There is no notes margin:
 
-- Margin shows annotations with a note, Claude's questions, and the selected highlight; the "With notes / All highlights" toggle (remembered in localStorage) shows every highlight.
-- Several annotations on the same passage stack like a thread: e.g. the user's highlight + note, then "Claude's note" (`type=note`, no color, tag `claude`, same selectors via `lib add-note --on <id>`), which only underlines the passage.
-- Hovering a card highlights its passage; clicking a highlight selects its card; clicking plain text deselects. "✦ Claude notes" copies `/highlight-notes <doc> <chapter>`.
-- Orphans are listed under the chapter text on desktop. Below 1280px everything goes in the "Notes" bottom sheet.
+- A passage with a note or a Claude question ends in a small dot (`note-markers.tsx`, measured from the range's last line).
+- Clicking painted text or a dot opens `note-bubble.tsx` under the passage: every annotation overlapping that passage (`passages.ts`), yours first, then Claude's notes and questions, in larger text with edit/color/link/Ask Claude/delete. Click elsewhere, the ✕ or Esc closes it.
+- "Note" in the selection popover opens the bubble with the editor focused (`preventScroll`); deep links (`#a-…`) pulse the passage and open its bubble. The bubble only scrolls the page when the passage or the bubble would be hidden (below the 100px of sticky headers or past the viewport bottom).
+- "Notes (n)" in the toolbar opens the list of every note in the chapter (`notes-sheet.tsx`); orphaned notes are listed under the text. "✦ Claude notes" copies `/highlight-notes <doc> <chapter>`.
+- Positions re-measure on resize and when the article changes size (`use-layout-tick.ts`).
 
 TOC is a left drawer. Keyboard: ← / → previous/next chapter, Esc closes panels.
