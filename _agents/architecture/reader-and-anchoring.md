@@ -22,7 +22,7 @@ Selection → `offsetsFromRange` → trim whitespace → `describeRange(text, st
 
 ## Painting
 
-CSS Custom Highlight API (`CSS.highlights`): one `Highlight` per color plus `hl-question` (Claude questions), `hl-note` (underline when a highlight has a note) and `hl-active` (deep-link pulse/selection). Clicks on painted text are mapped back with `caretPositionFromPoint` + `Range.isPointInRange`. Fallback for old browsers wraps text nodes in `<mark data-annotation>`.
+CSS Custom Highlight API (`CSS.highlights`): one `Highlight` per color plus `hl-question` (AI questions), `hl-note` (underline when a highlight has a note) and `hl-active` (deep-link pulse/selection). Clicks on painted text are mapped back with `caretPositionFromPoint` + `Range.isPointInRange`. Fallback for old browsers wraps text nodes in `<mark data-annotation>`.
 
 ## Deep links and progress
 
@@ -33,9 +33,9 @@ CSS Custom Highlight API (`CSS.highlights`): one `Highlight` per color plus `hl-
 The text column is up to 900px wide; figures and standalone images may extend to 1,100px (`--reader-figure-width` in `globals.css`), tables scroll sideways, and clicking an image opens it scaled to the screen (`image-lightbox.tsx`). There is no notes margin:
 
 - A passage with a note or a Claude question ends in a small dot (`note-markers.tsx`, measured from the range's last line).
-- Clicking painted text or a dot opens `note-bubble.tsx` under the passage, as wide as the text column: every annotation overlapping that passage (`passages.ts`), yours first, then Claude's notes and questions, in larger text with edit/color/link/Ask Claude/delete. Click elsewhere, the ✕ or Esc closes it.
+- Clicking painted text or a dot opens `note-bubble.tsx` under the passage, as wide as the text column: every annotation overlapping that passage (`passages.ts`), yours first, then AI notes and questions (tagged `claude`), in larger text with edit/color/link/Ask AI/delete. Click elsewhere, the ✕ or Esc closes it.
 - "Note" in the selection popover opens the bubble with the editor focused (`preventScroll`); deep links (`#a-…`) pulse the passage and open its bubble. The bubble only scrolls the page when the passage or the bubble would be hidden (below the 100px of sticky headers or past the viewport bottom).
-- "Notes (n)" in the toolbar opens the list of every note in the chapter (`notes-sheet.tsx`); orphaned notes are listed under the text. "✦ Claude notes" copies `/highlight-notes <doc> <chapter>`.
+- "Notes (n)" in the toolbar opens the list of every note in the chapter (`notes-sheet.tsx`); orphaned notes are listed under the text. "✦ AI notes" copies `/highlight-notes <doc> <chapter>`.
 - Positions re-measure on resize and when the article changes size (`use-layout-tick.ts`).
 
 TOC is a left drawer. Keyboard: ← / → previous/next chapter, Esc closes panels.

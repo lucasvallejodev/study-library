@@ -24,7 +24,7 @@ export function DocumentActions({ docId }: { docId: string }) {
 
   async function copyStudy() {
     await navigator.clipboard.writeText(`/study ${docId}`);
-    setMessage('Copied: paste it into Claude Code.');
+    setMessage('Copied: paste it into your AI agent.');
   }
 
   return (

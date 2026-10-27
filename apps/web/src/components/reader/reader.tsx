@@ -179,9 +179,9 @@ function ReaderHeader(props: ReaderSectionProps & { panels: ReaderPanels }) {
     notify,
   });
 
-  async function copyClaudeNotesPrompt() {
+  async function copyAiNotesPrompt() {
     await copyText(`/highlight-notes ${doc.id} ${chapter.id}`);
-    notify('Prompt copied — paste it into Claude Code');
+    notify('Prompt copied — paste it into your AI agent');
   }
 
   async function copyChapterAiPrompt() {
@@ -199,7 +199,7 @@ function ReaderHeader(props: ReaderSectionProps & { panels: ReaderPanels }) {
         noteCount={annotations.ordered.length + annotations.orphans.length}
         onOpenToc={panels.openToc}
         onCopyAiPrompt={copyChapterAiPrompt}
-        onCopyClaudeNotesPrompt={copyClaudeNotesPrompt}
+        onCopyAiNotesPrompt={copyAiNotesPrompt}
         onToggleBookmark={toggleBookmark}
         onToggleSheet={panels.toggleSheet}
         progress={progress}

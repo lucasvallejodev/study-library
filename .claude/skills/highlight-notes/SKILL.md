@@ -6,7 +6,7 @@ argument-hint: <doc> [chapter|all] [--only <annotation-id>] [--style explain|def
 
 # Notes on highlights
 
-Each note is a separate annotation attached to the same passage as the user's highlight, tagged `claude`. The reader shows it in the margin right under the user's own note, labelled "Claude's note", and only underlines the passage (it never repaints the user's highlight color).
+Each note is a separate annotation attached to the same passage as the user's highlight, tagged `claude`. The reader shows it in the margin right under the user's own note, labelled "AI note", and only underlines the passage (it never repaints the user's highlight color).
 
 ## Gather
 

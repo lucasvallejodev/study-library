@@ -113,7 +113,7 @@ function NotebookFilters({ notebook, params }: { notebook: Notebook; params: Not
         <option value="highlight">Highlights</option>
         <option value="note">Notes</option>
         <option value="bookmark">Bookmarks</option>
-        <option value="ai_question">Claude questions</option>
+        <option value="ai_question">AI questions</option>
       </select>
       <select name="color" defaultValue={params.color ?? ''} className={FILTER_CLASS}>
         <option value="">Any color</option>
@@ -162,7 +162,7 @@ function swatchOf(annotation: Annotation): string {
 }
 
 function typeLabelOf(annotation: Annotation): string {
-  return annotation.type === 'ai_question' ? 'Claude asked' : annotation.type;
+  return annotation.type === 'ai_question' ? 'AI asked' : annotation.type;
 }
 
 function chapterTitleOf(doc: LibraryDocument | undefined, chapterId: string): string | undefined {

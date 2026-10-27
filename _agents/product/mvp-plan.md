@@ -91,9 +91,9 @@ Rules: ids are stable strings; the DB can be rebuilt from `library/` except anno
 
 Routes: `/` library, `/import`, `/read/[doc]`, `/read/[doc]/[chapter]`, `/notebook`, `/search?q=`.
 
-Highlighting: select text → popover (4 colors, Add note, Copy link, Ask Claude) → TextQuote (exact + 32 chars prefix/suffix) and TextPosition selectors → `POST /api/annotations` → on load resolve position, verify quote, else fuzzy search, else mark `orphaned` and list it in the margin → paint with the CSS Custom Highlight API, falling back to `<mark>`.
+Highlighting: select text → popover (4 colors, Add note, Copy link, Ask AI) → TextQuote (exact + 32 chars prefix/suffix) and TextPosition selectors → `POST /api/annotations` → on load resolve position, verify quote, else fuzzy search, else mark `orphaned` and list it in the margin → paint with the CSS Custom Highlight API, falling back to `<mark>`.
 
-Notes: on a highlight, on a whole chapter, or free-floating in the notebook; Markdown bodies. Deep links `/read/ddia/ch-002#a-7f3k2` scroll to and pulse the highlight. "Ask Claude" copies `/study ddia ch-002 --focus a-7f3k2`. Reading style: serif, ~680px, 1.7 line height, light/dark; notes in the right margin on wide screens, bottom sheet on narrow ones.
+Notes: on a highlight, on a whole chapter, or free-floating in the notebook; Markdown bodies. Deep links `/read/ddia/ch-002#a-7f3k2` scroll to and pulse the highlight. "Ask AI" copies `/study ddia ch-002 --focus a-7f3k2`. Reading style: serif, ~680px, 1.7 line height, light/dark; notes in the right margin on wide screens, bottom sheet on narrow ones.
 
 ## AI integration with Claude Code
 

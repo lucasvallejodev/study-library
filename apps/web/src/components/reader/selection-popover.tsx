@@ -65,12 +65,12 @@ export function SelectionPopover(props: SelectionPopoverProps) {
     notify('Link copied');
   }
 
-  async function askClaude() {
+  async function askAi() {
     const created = await highlight({ color: 'blue' });
 
     if (!created) return;
     await copyText(studyPrompt(docId, chapterId, created.id));
-    notify('Prompt copied — paste it into Claude Code');
+    notify('Prompt copied — paste it into your AI agent');
   }
 
   return (
@@ -96,11 +96,11 @@ export function SelectionPopover(props: SelectionPopoverProps) {
         Link
       </button>
       <button
-        onClick={askClaude}
+        onClick={askAi}
         className={ACTION_CLASS}
-        title="Highlight and copy a /study prompt for Claude Code"
+        title="Highlight and copy a /study prompt for your AI agent"
       >
-        Ask Claude
+        Ask AI
       </button>
     </div>
   );

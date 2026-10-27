@@ -142,8 +142,8 @@ export function AnnotationCard(props: Props) {
 }
 
 function authorLabelOf(annotation: Annotation): string {
-  if (annotation.type === 'ai_question') return 'Claude asked';
-  if (isByClaude(annotation)) return 'Claude’s note';
+  if (annotation.type === 'ai_question') return 'AI asked';
+  if (isByClaude(annotation)) return 'AI note';
   if (annotation.body) return 'Your note';
 
   return 'Highlight';
@@ -163,7 +163,7 @@ function CardLabel({ annotation }: { annotation: Annotation }) {
 
   return (
     <div className="mb-1 text-[11px] font-semibold uppercase tracking-wider text-muted">
-      {annotation.type === 'ai_question' ? 'Claude asked' : 'Claude’s note'}
+      {annotation.type === 'ai_question' ? 'AI asked' : 'AI note'}
     </div>
   );
 }
@@ -265,7 +265,7 @@ function CardActions({
 
   async function copyStudyPrompt() {
     await copyText(studyPrompt);
-    notify('Prompt copied — paste it into Claude Code');
+    notify('Prompt copied — paste it into your AI agent');
   }
 
   async function copyAiPrompt() {
@@ -292,7 +292,7 @@ function CardActions({
         Link
       </button>
       <button onClick={copyStudyPrompt} className="hover:text-ink">
-        Ask Claude
+        Ask AI
       </button>
       {annotation.chapterId && (
         <button

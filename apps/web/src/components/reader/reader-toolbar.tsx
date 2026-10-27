@@ -10,8 +10,8 @@ type ReaderToolbarProps = {
   chapterTitle: string;
   doc: ReaderDocument;
   noteCount: number;
+  onCopyAiNotesPrompt: () => Promise<void>;
   onCopyAiPrompt: () => Promise<void>;
-  onCopyClaudeNotesPrompt: () => Promise<void>;
   onOpenToc: () => void;
   onToggleBookmark: () => Promise<void>;
   onToggleSheet: () => void;
@@ -66,11 +66,11 @@ export function ReaderToolbar(props: ReaderToolbarProps) {
           ⧉ Copy for AI
         </button>
         <button
-          onClick={props.onCopyClaudeNotesPrompt}
+          onClick={props.onCopyAiNotesPrompt}
           className="hidden shrink-0 whitespace-nowrap rounded px-2 py-1 text-muted hover:bg-panel hover:text-ink sm:block"
-          title="Copy a Claude Code prompt that writes notes on this chapter's highlights"
+          title="Copy a prompt for your AI agent that writes notes on this chapter's highlights"
         >
-          ✦ Claude notes
+          ✦ AI notes
         </button>
         <button
           onClick={props.onToggleSheet}
