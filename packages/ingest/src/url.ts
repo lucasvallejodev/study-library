@@ -55,7 +55,7 @@ export async function renderWithBrowser(url: string): Promise<string | undefined
   let pw: BrowserModule;
   try {
     const moduleName = "playwright";
-    pw = (await import(/* webpackIgnore: true */ moduleName)) as BrowserModule;
+    pw = (await import(/* webpackIgnore: true */ /* turbopackIgnore: true */ moduleName)) as BrowserModule;
   } catch {
     return undefined;
   }

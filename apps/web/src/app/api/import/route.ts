@@ -6,7 +6,7 @@ import { isUrl } from "@study/ingest";
 import { HttpError, route } from "@/lib/http";
 import { enqueueJob } from "@/lib/jobs";
 
-const ALLOWED = /\.(epub|mobi|azw|azw3|prc|html?)$/i;
+const ALLOWED = /\.(epub|mobi|azw|azw3|prc|html?|md|markdown)$/i;
 
 /** POST /api/import — multipart `file` upload, or JSON/form `url`. Optional `id`, `tocDepth`. */
 export const POST = route(async (req: Request) => {
@@ -20,7 +20,7 @@ export const POST = route(async (req: Request) => {
     const file = form.get("file");
     const url = form.get("url");
     if (file instanceof File && file.size > 0) {
-      if (!ALLOWED.test(file.name)) throw new HttpError(400, "Upload an .epub, .mobi, .azw, .azw3 or .html file");
+      if (!ALLOWED.test(file.name)) throw new HttpError(400, "Upload an .epub, .mobi, .azw, .azw3, .html or .md file");
       const dir = path.join(tempDir(), "uploads");
       await mkdir(dir, { recursive: true });
       const ext = path.extname(file.name).toLowerCase();

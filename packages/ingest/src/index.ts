@@ -7,6 +7,7 @@ import type { Db } from "@study/core/db";
 import { indexDocument } from "@study/core/db";
 import { convertToEpub } from "./calibre";
 import { EpubBook, convertEpub, sliceChapters } from "./epub";
+import { parseMarkdownFile } from "./markdown";
 import { defaultFetcher, processArticle, renderWithBrowser, type Fetcher } from "./url";
 import { AssetStore, assignChapterIds, writeLibraryDocument, type Warning } from "./writer";
 
@@ -54,8 +55,9 @@ export async function importSource(input: string, opts: ImportOptions = {}): Pro
     if (ext === ".epub") result = await importEpubFile(input, opts);
     else if (EBOOK_EXT.has(ext)) result = await importKindleFile(input, opts);
     else if (ext === ".html" || ext === ".htm") result = await importHtmlFile(input, opts);
+    else if (ext === ".md" || ext === ".markdown") result = await importMarkdownFile(input, opts);
     else if (ext === ".pdf") throw new Error("PDF import is planned for v0.3 and not supported yet.");
-    else throw new Error(`Unsupported file type "${ext}". Supported: .epub, .mobi, .azw, .azw3, .html, or an http(s) URL.`);
+    else throw new Error(`Unsupported file type "${ext}". Supported: .epub, .mobi, .azw, .azw3, .html, .md, or an http(s) URL.`);
   }
   if (opts.db) {
     log("Indexing in PostgreSQL…");
@@ -199,6 +201,29 @@ async function importHtmlFile(file: string, opts: ImportOptions): Promise<Import
     return finishArticle(html, url, { ...opts, fetcher: opts.fetcher ?? fileFetcher }, []);
   }
   return finishArticle(html, url, opts, []);
+}
+
+async function importMarkdownFile(file: string, opts: ImportOptions): Promise<ImportResult> {
+  const warnings: Warning[] = [];
+  const assets = new AssetStore();
+  const { meta, chapters } = await parseMarkdownFile(file, assets, warnings);
+  if (chapters.length === 0) throw new Error("The Markdown file is empty");
+  const id = resolveId(meta.title, opts);
+  const ids = assignChapterIds(chapters.map((c) => c.title), opts.previous);
+  const { doc, report } = await writeLibraryDocument({
+    id,
+    title: meta.title,
+    authors: meta.authors,
+    kind: meta.kind ?? "book",
+    description: meta.description,
+    source: { type: "markdown", file: "source/original.md", importedAt: new Date().toISOString(), ...(meta.sourceUrl ? { url: meta.sourceUrl } : {}) },
+    chapters: chapters.map((c, i) => ({ ...c, id: ids[i]! })),
+    assets,
+    sourceFiles: [{ relative: "source/original.md", from: file }],
+    importer: "markdown",
+    warnings,
+  });
+  return { document: doc, report };
 }
 
 /** Re-run the import from the saved source, keeping the document id and matching chapter ids. */

@@ -52,7 +52,7 @@ export default async function DocumentPage({ params }: Props) {
         <p className="text-xs uppercase tracking-wider text-muted">{doc.kind}</p>
         <h1 className="mt-1 font-serif text-4xl leading-tight">{doc.title}</h1>
         {doc.authors.length > 0 && <p className="mt-2 text-lg text-muted">{doc.authors.join(", ")}</p>}
-        {"url" in doc.source && (
+        {"url" in doc.source && doc.source.url && (
           <a href={doc.source.url} target="_blank" rel="noreferrer" className="mt-1 block truncate text-sm text-accent">{doc.source.url}</a>
         )}
         {doc.description && <p className="mt-4 font-serif text-muted">{doc.description}</p>}

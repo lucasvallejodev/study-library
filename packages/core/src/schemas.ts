@@ -38,7 +38,15 @@ export const UrlSourceSchema = z.object({
   /** Saved copy of the fetched HTML, relative to the document folder. */
   file: z.string().optional(),
 });
+export const MarkdownSourceSchema = z.object({
+  type: z.literal("markdown"),
+  file: z.string(),
+  importedAt: z.string().datetime(),
+  /** Where the content originally came from (a PDF's URL, a website...), if known. */
+  url: z.string().url().optional(),
+});
 export const SourceSchema = z.discriminatedUnion("type", [
+  MarkdownSourceSchema,
   FileSourceSchema.extend({ type: z.literal("epub") }),
   FileSourceSchema.extend({ type: z.literal("mobi") }),
   FileSourceSchema.extend({ type: z.literal("azw") }),

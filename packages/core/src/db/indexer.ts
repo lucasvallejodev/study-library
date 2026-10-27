@@ -20,7 +20,7 @@ export async function indexDocument(db: Db, docId: string): Promise<void> {
       plainText: stripMarkdown(await readChapterBody(doc.id, c)),
     })),
   );
-  const sourceUrl = "url" in doc.source ? doc.source.url : null;
+  const sourceUrl = ("url" in doc.source && doc.source.url) || null;
   await db.transaction(async (tx) => {
     await tx
       .insert(documents)
