@@ -1,5 +1,15 @@
-/** Thin HTTP client for the web app's API. LIB_API_URL points at the server (default localhost:3000). */
-export const API_URL = (process.env.LIB_API_URL ?? 'http://localhost:3000').replace(/\/$/, '');
+import { Patterns } from './patterns';
+
+type RequestOptions = RequestInit & { json?: unknown };
+
+const DEFAULT_API_URL = 'http://localhost:3000';
+const UNREACHABLE_STATUS = 0;
+const JsonContentType = { 'content-type': 'application/json' };
+
+export const API_URL = (process.env.LIB_API_URL ?? DEFAULT_API_URL).replace(
+  Patterns.trailingSlash,
+  ''
+);
 
 export class ApiError extends Error {
   constructor(
@@ -10,40 +20,46 @@ export class ApiError extends Error {
   }
 }
 
-export const request = async <T = unknown>(
-  path: string,
-  init: RequestInit & { json?: unknown } = {}
-): Promise<T> => {
-  const { json, ...rest } = init;
-  let res: Response;
+const toFetchInit = ({ json, ...init }: RequestOptions): RequestInit => {
+  if (json === undefined) return init;
 
+  return {
+    ...init,
+    body: JSON.stringify(json),
+    headers: { ...JsonContentType, ...init.headers },
+  };
+};
+
+const fetchFromServer = async (path: string, init: RequestInit): Promise<Response> => {
   try {
-    res = await fetch(`${API_URL}${path}`, {
-      ...rest,
-      body: json !== undefined ? JSON.stringify(json) : rest.body,
-      headers: {
-        ...(json !== undefined ? { 'content-type': 'application/json' } : {}),
-        ...rest.headers,
-      },
-    });
-  } catch (e) {
+    return await fetch(`${API_URL}${path}`, init);
+  } catch (error) {
     throw new ApiError(
-      0,
-      `Cannot reach the Study Library server at ${API_URL} (${(e as Error).message}). Start it with \`pnpm dev\` or set LIB_API_URL.`
+      UNREACHABLE_STATUS,
+      `Cannot reach the Study Library server at ${API_URL} (${(error as Error).message}). Start it with \`pnpm dev\` or set LIB_API_URL.`
     );
   }
+};
 
-  const type = res.headers.get('content-type') ?? '';
-  const body = type.includes('json') ? await res.json() : await res.text();
+const readBody = async (response: Response): Promise<unknown> => {
+  const contentType = response.headers.get('content-type') ?? '';
 
-  if (!res.ok) {
-    const msg =
-      typeof body === 'object' && body && 'error' in body
-        ? String((body as { error: unknown }).error)
-        : String(body);
+  if (contentType.includes('json')) return (await response.json()) as unknown;
 
-    throw new ApiError(res.status, msg);
-  }
+  return response.text();
+};
+
+const errorMessage = (body: unknown): string => {
+  if (typeof body === 'object' && body !== null && 'error' in body) return String(body.error);
+
+  return String(body);
+};
+
+export const request = async <T>(path: string, options: RequestOptions = {}): Promise<T> => {
+  const response = await fetchFromServer(path, toFetchInit(options));
+  const body = await readBody(response);
+
+  if (!response.ok) throw new ApiError(response.status, errorMessage(body));
 
   return body as T;
 };
