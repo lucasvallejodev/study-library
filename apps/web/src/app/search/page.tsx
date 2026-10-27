@@ -1,6 +1,7 @@
 import Link from 'next/link';
 
 import { annotationAnchorHref, quoteOf } from '@/components/annotations';
+import { MarkdownView } from '@/components/notes/markdown-view';
 import { escapeHtmlKeepingMarks } from '@/components/patterns';
 import { search, toAnnotation } from '@/lib/data';
 import type { Annotation } from '@study/core';
@@ -89,9 +90,9 @@ function NoteResult({ note }: { note: Annotation }) {
   return (
     <li className="rounded-lg border border-line p-3 text-sm">
       <Link href={annotationAnchorHref(note) ?? '/notebook'} className="hover:text-accent">
-        {quote !== undefined && <span className="font-serif">“{quote}”</span>}
-        {note.body && <span className="mt-1 block text-muted">{note.body}</span>}
+        {quote === undefined ? 'Open note' : <span className="font-serif">“{quote}”</span>}
       </Link>
+      {note.body && <MarkdownView source={note.body} className="mt-1 text-muted" />}
     </li>
   );
 }

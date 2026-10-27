@@ -1,10 +1,14 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
+import { useState } from 'react';
 
 import type { Annotation, HighlightColor } from '@study/core';
 
 import { copyText, HighlightColors, quoteOf, tagHref } from '../annotations';
+import { MarkdownEditor } from '../notes/markdown-editor';
+import { type MarkdownSize, MarkdownView } from '../notes/markdown-view';
+import { TagInput } from '../notes/tag-input';
+import { forgetKnownTags } from '../notes/use-known-tags';
 import { AnnotationApi } from './api';
 import { cardElementId } from './reader-types';
 
@@ -15,7 +19,10 @@ const EditorRows: Record<CardVariant, number> = {
   card: 4,
 };
 
-const FocusWithoutScrolling = { preventScroll: true };
+const NoteTextSizes: Record<CardVariant, MarkdownSize> = {
+  bubble: 'base',
+  card: 'sm',
+};
 
 export type CardVariant = 'card' | 'bubble';
 
@@ -35,20 +42,13 @@ type Props = {
 
 type Draft = {
   body: string;
-  tags: string;
+  tags: string[];
 };
 
 type DraftSource = Pick<Annotation, 'body' | 'tags'>;
 
 function draftOf(annotation: DraftSource): Draft {
-  return { body: annotation.body ?? '', tags: annotation.tags.join(', ') };
-}
-
-function parseTags(tags: string): string[] {
-  return tags
-    .split(',')
-    .map(tag => tag.trim())
-    .filter(Boolean);
+  return { body: annotation.body ?? '', tags: annotation.tags };
 }
 
 function isByClaude(annotation: Annotation): boolean {
@@ -95,9 +95,10 @@ export function AnnotationCard(props: Props) {
   async function save() {
     const updated = await AnnotationApi.update(annotation.id, {
       body: draft.body.trim() || null,
-      tags: parseTags(draft.tags),
+      tags: draft.tags,
     });
 
+    forgetKnownTags();
     onChange(updated);
     onEdit(false);
   }
@@ -115,6 +116,7 @@ export function AnnotationCard(props: Props) {
       {editing ? (
         <NoteEditor
           rows={EditorRows[variant]}
+          size={NoteTextSizes[variant]}
           draft={draft}
           onDraftChange={setDraft}
           onSave={save}
@@ -122,7 +124,7 @@ export function AnnotationCard(props: Props) {
         />
       ) : (
         <>
-          <NoteBody annotation={annotation} />
+          <NoteBody annotation={annotation} size={NoteTextSizes[variant]} />
           <CardActions {...props} hasQuote={Boolean(quote)} />
         </>
       )}
@@ -178,48 +180,23 @@ type NoteEditorProps = {
   onDraftChange: (draft: Draft) => void;
   onSave: () => Promise<void>;
   rows: number;
+  size: MarkdownSize;
 };
 
-function useFocusedWithoutScrolling() {
-  const editorRef = useRef<HTMLTextAreaElement>(null);
-
-  useEffect(() => {
-    editorRef.current?.focus(FocusWithoutScrolling);
-  }, []);
-
-  return editorRef;
-}
-
-function isSaveShortcut(event: React.KeyboardEvent): boolean {
-  return event.key === 'Enter' && (event.metaKey || event.ctrlKey);
-}
-
-function NoteEditor({ draft, onCancel, onDraftChange, onSave, rows }: NoteEditorProps) {
-  const editorRef = useFocusedWithoutScrolling();
-
-  function onKeyDown(event: React.KeyboardEvent) {
-    if (isSaveShortcut(event)) void onSave();
-    if (event.key === 'Escape') onCancel();
-  }
-
+function NoteEditor({ draft, onCancel, onDraftChange, onSave, rows, size }: NoteEditorProps) {
   return (
     <div className="mt-2 space-y-2">
-      <textarea
-        ref={editorRef}
+      <MarkdownEditor
+        autoFocus
         value={draft.body}
-        onChange={event => onDraftChange({ ...draft, body: event.target.value })}
-        onKeyDown={onKeyDown}
-        rows={rows}
-        placeholder="Write a note (Markdown)… ⌘↵ to save"
-        className="w-full rounded border border-line bg-paper p-2 outline-none focus:border-accent"
+        onChange={body => onDraftChange({ ...draft, body })}
+        onSubmit={() => void onSave()}
+        onCancel={onCancel}
+        minRows={rows}
+        size={size}
       />
-      <input
-        value={draft.tags}
-        onChange={event => onDraftChange({ ...draft, tags: event.target.value })}
-        placeholder="tags, comma separated"
-        className="w-full rounded border border-line bg-paper px-2 py-1 text-xs outline-none focus:border-accent"
-      />
-      <div className="flex gap-2">
+      <TagInput tags={draft.tags} onChange={tags => onDraftChange({ ...draft, tags })} />
+      <div className="flex gap-2 text-sm">
         <button onClick={onSave} className="rounded bg-accent px-3 py-1 text-white">
           Save
         </button>
@@ -231,12 +208,12 @@ function NoteEditor({ draft, onCancel, onDraftChange, onSave, rows }: NoteEditor
   );
 }
 
-function NoteBody({ annotation }: { annotation: Annotation }) {
+function NoteBody({ annotation, size }: { annotation: Annotation; size: MarkdownSize }) {
   const visibleTags = visibleTagsOf(annotation);
 
   return (
     <>
-      {annotation.body && <p className="mt-2 whitespace-pre-wrap">{annotation.body}</p>}
+      {annotation.body && <MarkdownView source={annotation.body} size={size} className="mt-2" />}
       {visibleTags.length > 0 && (
         <div className="mt-2 flex flex-wrap gap-1">
           {visibleTags.map(tag => (

@@ -6,6 +6,8 @@ import { useState } from 'react';
 import { copyText } from '@/components/annotations';
 import { postJson } from '@/components/http';
 
+import { MarkdownEditor } from './notes/markdown-editor';
+
 type ExportedDocument = {
   count: number;
   id: string;
@@ -40,13 +42,14 @@ export function FreeNoteForm() {
 
   return (
     <div className="mt-4">
-      <textarea
+      <MarkdownEditor
         autoFocus
         value={body}
-        onChange={event => setBody(event.target.value)}
-        rows={FREE_NOTE_ROWS}
-        placeholder="A thought that isn't tied to a passage…"
-        className="w-full rounded-lg border border-line bg-panel p-3 text-sm outline-none focus:border-accent"
+        onChange={setBody}
+        onSubmit={() => void save()}
+        onCancel={() => setOpen(false)}
+        minRows={FREE_NOTE_ROWS}
+        placeholder="A thought that isn't tied to a passage… Markdown works. ⌘↵ to save"
       />
       <div className="mt-2 flex gap-2 text-sm">
         <button onClick={save} className="rounded bg-accent px-3 py-1 text-white">

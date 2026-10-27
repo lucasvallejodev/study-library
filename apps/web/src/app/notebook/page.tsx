@@ -2,6 +2,7 @@ import Link from 'next/link';
 
 import { annotationAnchorHref, HighlightColors, quoteOf, tagHref } from '@/components/annotations';
 import { FreeNoteForm, NotebookItemActions } from '@/components/notebook-client';
+import { MarkdownView } from '@/components/notes/markdown-view';
 import { relativeTime } from '@/components/ui';
 import { type AnnotationFilter, listAnnotations, toAnnotation } from '@/lib/data';
 import { type Annotation, type LibraryDocument, listDocumentIds, readDocument } from '@study/core';
@@ -182,7 +183,7 @@ function NotebookItem({ annotation, docs }: { annotation: Annotation; docs: Libr
         {annotation.orphaned && <span className="text-red-600">· orphaned</span>}
       </div>
       <NotebookQuote annotation={annotation} href={href} />
-      {annotation.body && <p className="mt-2 whitespace-pre-wrap text-sm">{annotation.body}</p>}
+      {annotation.body && <MarkdownView source={annotation.body} className="mt-2" />}
       <div className="mt-2 flex flex-wrap items-center gap-2 text-xs">
         {annotation.tags.map(tag => (
           <Link key={tag} href={tagHref(tag)} className="rounded-full bg-panel px-2 text-muted">

@@ -5,6 +5,7 @@ import { useState } from 'react';
 import type { Annotation } from '@study/core';
 
 import { studyPrompt } from '../annotations';
+import { MarkdownEditor } from '../notes/markdown-editor';
 import { AnnotationCard } from './annotation-card';
 import { AnnotationApi } from './api';
 
@@ -20,10 +21,6 @@ type Props = {
   onCreate: (annotation: Annotation) => void;
   onDelete: (id: string) => void;
 };
-
-function isSaveShortcut(event: React.KeyboardEvent): boolean {
-  return event.key === 'Enter' && (event.metaKey || event.ctrlKey);
-}
 
 export function ChapterNotes(props: Props) {
   const { chapterId, documentId, notes, onCreate } = props;
@@ -60,14 +57,15 @@ export function ChapterNotes(props: Props) {
           />
         ))}
       </div>
-      <textarea
-        value={draft}
-        onChange={event => setDraft(event.target.value)}
-        onKeyDown={event => isSaveShortcut(event) && void add()}
-        rows={DRAFT_ROWS}
-        placeholder="Summarise the chapter, note open questions… (Markdown, ⌘↵ to save)"
-        className="mt-3 w-full rounded-lg border border-line bg-panel p-3 text-sm outline-none focus:border-accent"
-      />
+      <div className="mt-3">
+        <MarkdownEditor
+          value={draft}
+          onChange={setDraft}
+          onSubmit={() => void add()}
+          minRows={DRAFT_ROWS}
+          placeholder="Summarise the chapter, note open questions… Markdown works. ⌘↵ to save"
+        />
+      </div>
       <button
         onClick={add}
         disabled={!draft.trim()}
